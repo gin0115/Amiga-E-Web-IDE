@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Amiga E Web IDE</title>
+  <link rel="stylesheet" href="./lib/codemirror/codemirror.min.css" />
   <style>
     :root {
       color-scheme: dark;
@@ -14,10 +15,26 @@
       --go: #1d4023; --go-border: #3a7a4a; --go-text: #b8ffc8;
       --accent: #5a7bff; --ok: #8affa0; --err: #ff8a8a; --console-text: #b8c8b8;
       --syn-keyword: #ff9d5c; --syn-builtin: #7bd88f; --syn-string: #e6d37a;
-      --syn-string2: #e6b37a; --syn-number: #c8a0ff; --syn-comment: #5a6a5a;
+      --syn-string2: #e6b37a; --syn-number: #c8a0ff; --syn-comment: #7a8a7a;
       --syn-operator: #8ad0ff; --syn-atom: #ff7b9d; --syn-var: #d8d8ec;
-      --gutter-text: #4a4a66; --cursor: #7bd88f; --selection: #25254a;
+      --gutter-text: #6a6a8a; --cursor: #7bd88f; --selection: #25254a;
       --tag-bin: #ffc98a; --tag-rom: #8ad0ff; --tag-disk: #c8a0ff; --tag-hdf: #a0ffc8; --tag-project: #ffa0c8;
+      --head-text: #c7c7d9;
+    }
+    [data-theme="light"] {
+      color-scheme: light;
+      --bg: #f2f2f7; --panel: #ffffff; --panel-head: #e4e4ee; --editor-bg: #fbfbfe;
+      --control: #e8e8f0; --control-hover: #d8d8e4; --primary: #c8d4f8; --primary-border: #7a8ac0;
+      --border: #b8b8cc; --border-subtle: #d0d0de; --hairline: #e0e0ea;
+      --text: #2a2a3a; --text-bright: #11111c; --muted: #4a4a64; --dim: #6a6a84;
+      --go: #d4eed8; --go-border: #5a9a6a; --go-text: #14491f;
+      --accent: #3a5bdf; --ok: #156a28; --err: #b02828; --console-text: #234423;
+      --syn-keyword: #b34d08; --syn-builtin: #11652b; --syn-string: #6e5400;
+      --syn-string2: #8c4d18; --syn-number: #6c28ae; --syn-comment: #5e6e5e;
+      --syn-operator: #1a52ae; --syn-atom: #ad1a52; --syn-var: #2a2a3a;
+      --gutter-text: #8a8aa2; --cursor: #11652b; --selection: #c8d8f8;
+      --tag-bin: #8a5000; --tag-rom: #17518c; --tag-disk: #5e2492; --tag-hdf: #126b3c; --tag-project: #a02460;
+      --head-text: #2a2a3a;
     }
     [data-theme="workbench"] {
       color-scheme: light;
@@ -26,26 +43,28 @@
       --border: #555555; --border-subtle: #777777; --hairline: #888888;
       --text: #111111; --text-bright: #000000; --muted: #333333; --dim: #555555;
       --go: #ff8800; --go-border: #aa5500; --go-text: #000000;
-      --accent: #0055aa; --ok: #005500; --err: #aa0000; --console-text: #111111;
-      --syn-keyword: #0055aa; --syn-builtin: #884400; --syn-string: #555500;
-      --syn-string2: #774400; --syn-number: #550088; --syn-comment: #666666;
-      --syn-operator: #003377; --syn-atom: #aa0055; --syn-var: #111111;
+      --accent: #0055aa; --ok: #005500; --err: #7a0000; --console-text: #111111;
+      --syn-keyword: #003f80; --syn-builtin: #6a3400; --syn-string: #414100;
+      --syn-string2: #5c3400; --syn-number: #550088; --syn-comment: #4a4a4a;
+      --syn-operator: #003377; --syn-atom: #80003f; --syn-var: #111111;
       --gutter-text: #444444; --cursor: #ff8800; --selection: #88aadd;
       --tag-bin: #884400; --tag-rom: #003377; --tag-disk: #550088; --tag-hdf: #005522; --tag-project: #880044;
+      --head-text: #ffffff;
     }
     [data-theme="solarized"] {
       color-scheme: dark;
       --bg: #002b36; --panel: #073642; --panel-head: #00212b; --editor-bg: #002b36;
       --control: #0a4250; --control-hover: #155a6a; --primary: #155a6a; --primary-border: #2aa198;
       --border: #2a5a66; --border-subtle: #15454f; --hairline: #0a3540;
-      --text: #93a1a1; --text-bright: #eee8d5; --muted: #657b83; --dim: #586e75;
+      --text: #aab8b8; --text-bright: #eee8d5; --muted: #8fa1a1; --dim: #7e9292;
       --go: #1a4a30; --go-border: #859900; --go-text: #b8e8a0;
-      --accent: #268bd2; --ok: #859900; --err: #dc322f; --console-text: #93a1a1;
-      --syn-keyword: #cb4b16; --syn-builtin: #859900; --syn-string: #b58900;
-      --syn-string2: #cb4b16; --syn-number: #d33682; --syn-comment: #586e75;
-      --syn-operator: #268bd2; --syn-atom: #d33682; --syn-var: #93a1a1;
-      --gutter-text: #586e75; --cursor: #859900; --selection: #155a6a;
-      --tag-bin: #b58900; --tag-rom: #268bd2; --tag-disk: #6c71c4; --tag-hdf: #2aa198; --tag-project: #d33682;
+      --accent: #268bd2; --ok: #a8bd1a; --err: #ff6b66; --console-text: #93a1a1;
+      --syn-keyword: #ee7a40; --syn-builtin: #859900; --syn-string: #b58900;
+      --syn-string2: #ee7a40; --syn-number: #ec6cac; --syn-comment: #8fa1a1;
+      --syn-operator: #54aae8; --syn-atom: #ec6cac; --syn-var: #93a1a1;
+      --gutter-text: #7e9292; --cursor: #859900; --selection: #155a6a;
+      --tag-bin: #b58900; --tag-rom: #268bd2; --tag-disk: #9296de; --tag-hdf: #2aa198; --tag-project: #ec6cac;
+      --head-text: #eee8d5;
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -130,7 +149,7 @@
     }
     .section > .sect-title {
       padding: 7px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
-      color: var(--text); font-weight: 600; display: flex; align-items: center; gap: 8px;
+      color: var(--head-text); font-weight: 600; display: flex; align-items: center; gap: 8px;
       cursor: pointer; background: var(--panel-head); border-bottom: 1px solid var(--border-subtle);
       border-left: 3px solid var(--primary-border);
     }
@@ -139,7 +158,8 @@
     #sectFs       > .sect-title { border-left-color: #c8a23a; }
     #sectBox      > .sect-title { border-left-color: #9a5acf; }
     #sectSettings > .sect-title { border-left-color: var(--dim); }
-    .section > .sect-title:hover { background: var(--control-hover); }
+    .section > .sect-title:hover { filter: brightness(1.15); }
+    .section > .sect-title .meta, .section > .sect-title label { color: var(--head-text); opacity: .7; }
     .section > .sect-title .spacer { flex: 1; }
     .section > .sect-body { padding: 8px 12px 12px; }
     .section.collapsed > .sect-body { display: none; }
@@ -190,9 +210,13 @@
     .drivechip:hover { background: var(--control-hover); color: var(--text-bright); }
     .drivechip.df3 { border-color: var(--tag-bin); color: var(--tag-bin); }
     select { padding: 3px 6px; }
+    .popmenu {
+      position: fixed; z-index: 99; background: var(--control); color: var(--text);
+      border: 1px solid var(--primary-border); border-radius: 6px; padding: 4px;
+      max-height: 50vh; overflow: auto; box-shadow: 0 4px 16px rgba(0,0,0,.5);
+    }
     input[type=number] { width: 56px; font: inherit; background: var(--control); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; }
   </style>
-  <link rel="stylesheet" href="./lib/codemirror/codemirror.min.css" />
   <script src="./lib/codemirror/codemirror.min.js"></script>
   <script src="./lib/codemirror/simple.min.js"></script>
   <script src="./adf.js"></script>
@@ -682,13 +706,12 @@ function driveLabel(d) {
 async function pickDiskFor(slot) {
   const items = (await DiskBox.list()).filter(i => i.category === 'disk');
   const menu = document.createElement('div');
-  menu.style.cssText = 'position:fixed;z-index:99;background:#16162a;border:1px solid #5a5a8a;'
-    + 'border-radius:6px;padding:4px;max-height:50vh;overflow:auto;box-shadow:0 4px 16px #000';
+  menu.className = 'popmenu';
   const add = (label, fn) => {
     const it = document.createElement('div');
     it.textContent = label;
     it.style.cssText = 'padding:5px 12px;cursor:pointer;border-radius:4px';
-    it.onmouseenter = () => it.style.background = '#2a2a55';
+    it.onmouseenter = () => it.style.background = 'var(--control-hover)';
     it.onmouseleave = () => it.style.background = '';
     it.onclick = () => { menu.remove(); fn(); };
     menu.appendChild(it);
@@ -797,13 +820,12 @@ function chooseDelivery(anchorEvent) {
   // asked only when running as WB — floppy is instant, HDD reboots
   return new Promise(resolve => {
     const menu = document.createElement('div');
-    menu.style.cssText = 'position:fixed;z-index:99;background:#16162a;border:1px solid #5a5a8a;'
-      + 'border-radius:6px;padding:4px;box-shadow:0 4px 16px #000';
+    menu.className = 'popmenu';
     const add = (label, val) => {
       const it = document.createElement('div');
       it.textContent = label;
       it.style.cssText = 'padding:6px 14px;cursor:pointer;border-radius:4px';
-      it.onmouseenter = () => it.style.background = '#2a2a55';
+      it.onmouseenter = () => it.style.background = 'var(--control-hover)';
       it.onmouseleave = () => it.style.background = '';
       it.onclick = () => { menu.remove(); resolve(val); };
       menu.appendChild(it);
