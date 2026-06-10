@@ -767,30 +767,11 @@ function renderDrives() {
 }
 renderDrives();
 
-async function getHdf() {
-  if (pending.hdf) return;
-  const items = (await DiskBox.list()).filter(i => i.category === 'hdf');
-  if (items.length) {
-    pending.hdf = await DiskBox.get('hdf', items[0].name);
-    pending.hdfName = items[0].name;
-    return;
-  }
-  try {        // bundled fallback: the WB boot disk expects DH0 (work.hdf)
-    const res = await fetch('./disks/work.hdf');
-    if (res.ok) {
-      pending.hdf = new Uint8Array(await res.arrayBuffer());
-      pending.hdfName = 'work.hdf';
-      log('work.hdf mounted as DH0: (your boot disk expects it)', 'dim');
-    }
-  } catch { /* none */ }
-}
-
 async function bootWb() {
   const rom = await getRom();
   if (!rom) { log('Set a Kickstart ROM first (Build & Run panel).', 'err'); return false; }
   const wb = await getWbDisk();
   if (!wb) { log('No Workbench ADF — add one with "Add disk".', 'err'); return false; }
-  await getHdf();
   const ok = await bootEmulator(
     { rom, df0: wb, df0Name: drives[0] ? drives[0].name : 'workbench.adf',
       df1: drives[1] && drives[1].bytes, df2: drives[2] && drives[2].bytes,
