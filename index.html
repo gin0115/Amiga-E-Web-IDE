@@ -324,6 +324,16 @@
             <label><input id="setNtsc" type="checkbox" /> NTSC</label>
           </div>
           <div class="row">
+            <label>Screen size</label>
+            <select id="setScale">
+              <option value="1">1×</option>
+              <option value="1.5">1.5×</option>
+              <option value="2">2×</option>
+              <option value="fit" selected>fit pane</option>
+            </select>
+            <span class="meta">applies immediately</span>
+          </div>
+          <div class="row">
             <label><input id="setTurbo" type="checkbox" checked /> turbo floppy (fast boots)</label>
             <label><input id="setAudio" type="checkbox" checked /> audio</label>
             <span class="meta">applies on next boot</span>
@@ -623,7 +633,10 @@ for (const sect of document.querySelectorAll('.section > .sect-title')) {
 
 window.onEmuStatus = (msg, isError) => {
   $('emuStatus').textContent = msg;
-  if (/Running/.test(msg)) $('emuHost').parentElement.classList.add('running');
+  if (/Running/.test(msg)) {
+    $('emuHost').parentElement.classList.add('running');
+    setTimeout(applyScreenSize, 300);
+  }
   if (/Stopped/.test(msg)) $('emuHost').parentElement.classList.remove('running');
   $('emuState').textContent = msg.length > 28 ? msg.slice(0, 28) + '…' : msg;
   if (isError) log('[emu] ' + msg, 'err');
@@ -1012,6 +1025,23 @@ $('boxInput').onchange = async e => {
   renderBox();
   e.target.value = '';
 };
+
+// ---------------- screen size (CSS scaling, live) ----------------
+function applyScreenSize() {
+  const v = $('setScale').value;
+  localStorage.setItem('ide-scale', v);
+  const canvas = document.querySelector('#emuHost canvas');
+  if (!canvas) return;
+  if (v === 'fit') {
+    canvas.style.setProperty('height', '100%', 'important');
+    canvas.style.setProperty('width', 'auto', 'important');
+  } else {
+    canvas.style.setProperty('width', (canvas.width * parseFloat(v)) + 'px', 'important');
+    canvas.style.setProperty('height', 'auto', 'important');
+  }
+}
+$('setScale').value = localStorage.getItem('ide-scale') || 'fit';
+$('setScale').addEventListener('change', applyScreenSize);
 
 // ---------------- theme ----------------
 const themeSel = $('theme');
