@@ -573,6 +573,18 @@ async function compileMain() {
   renderFS();
   return bin;
 }
+// a genuine TOOL icon from Wouter's E distribution — attached to compiled
+// binaries so Workbench shows them without "Show All Files"
+const TOOL_ICON_B64 = '4xAAAQAAAAAAJgCHADYAFwAEAAEAAQAl1LAAAAAAAAAAAAAAAAAAAAAAAAAAAAABA2oAAAAAACvk7gAAACIAAABwAAAAAAAAAAAAABAAAAAAAAA2ABYAAgADUygDAAAAAAAAAAAAAAAEAAAHwAAAAAwAABxx////7AAAGDH////sAAAHwf///+wAAB/x////7AAA4Q/////sAAMBAf///+wADAAAf///7AAQAAYf///sABAAGB///+wAIABgD///7AA4AYA////sACAAAA///+wAEAAAH///7AAQAAAf///sAAwAAP///+wAAwEB////7AAA4Q/////sAAAf8f///+wAAAAAAAAADAB////////0AP////////gA1VfVVVVVUADVXXQAAAAQANVddP///9AA1VAU////0ADVQAQAAAAQANUe8J///NAA1P7+Y//j0ADT//+cfx/QAM//+e+c/9AAz//n4AAAEADf/5/39//QAMf+f8f3/9AA3///9/AAEADP///v9//QAM///+/3/9AA0///AAAAEADU/v5////QANUe8P///9AA1UAEAAAAEADVVVVVVVVQAIAAAAAAAAgAAAAAGAAAABNXSU5ESU09MC8yLzY0MC8xOTQAAAAAE1RVTklUUz1NSUxMSVNFQ09ORAAAAAAPUE1PREU9U0VQQVJBVEUAAAAAClNPUlQ9TkFNRQAAAAALU0FGRT1GQUxTRQA=';
+function toolIcon() {
+  const raw = atob(TOOL_ICON_B64);
+  const b = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) b[i] = raw.charCodeAt(i);
+  // neutralise the snapshotted position -> NO_ICON_POSITION (WB auto-places)
+  b.set([0x80, 0, 0, 0], 0x3a);
+  b.set([0x80, 0, 0, 0], 0x3e);
+  return b;
+}
 function outBinName() {
   return ($('outName').value.trim() || 'prog').replace(/[^\w.-]/g, '').slice(0, 24) || 'prog';
 }
@@ -851,7 +863,7 @@ $('btnRunWb').onclick = async ev => {
   await DiskBox.put('bin', name + '.bin', bin);
   if (mode === 'hdd') {
     // fresh 1MB hardfile as a second IDE unit — boots WB with it attached
-    pending.hdf2 = window.buildHDF([{ name, bytes: bin }], 'COMPILED');
+    pending.hdf2 = window.buildHDF([{ name, bytes: bin }, { name: name + '.info', bytes: toolIcon() }], 'COMPILED');
     pending.hdf2Name = 'compiled.hdf';
     log('COMPILED hard disk built — booting Workbench with it attached…', 'ok');
     await bootWb();
@@ -862,9 +874,9 @@ $('btnRunWb').onclick = async ev => {
       await bootWb();
       return;
     }
-    const adf = window.buildADF([{ name, bytes: bin }], 'COMPILED');
+    const adf = window.buildADF([{ name, bytes: bin }, { name: name + '.info', bytes: toolIcon() }], 'COMPILED');
     mountADF(3, adf, 'COMPILED.adf');
-    log(`COMPILED disk mounted on DF3: — open it on the desktop and run "${name}"`, 'ok');
+    log(`COMPILED disk mounted on DF3: — open it on the desktop and double-click "${name}"`, 'ok');
   }
   renderBox();
   renderDrives();
