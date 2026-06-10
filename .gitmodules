@@ -1,0 +1,3 @@
+[submodule "ecomp"]
+	path = ecomp
+	url = https://github.com/gin0115/Amiga-E-Compiler-WebBased.git

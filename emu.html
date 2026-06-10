@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>amiga-ide — emulator</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #c7c7d9;
+      font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+    /* center + scale-to-fit, preserving the 720x568 aspect ratio.
+       !important overrides the inline size SAE stamps on the canvas. */
+    #sae-host { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    #sae-host canvas {
+      display: block; image-rendering: pixelated;
+      width: auto !important; height: auto !important;
+      max-width: 100%; max-height: 100%;
+    }
+    .hud { position: fixed; left: 6px; bottom: 4px; right: 6px; pointer-events: none; }
+    .status { min-height: 14px; color: #8a8ab0; }
+    .status.error { color: #ff6b6b; }
+    .bar { height: 3px; background: #1c1c2e; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+    #progress-bar { height: 100%; width: 0; background: linear-gradient(90deg,#5a7bff,#8a5aff); transition: width .15s; }
+  </style>
+</head>
+<body>
+  <!-- Self-contained SAE harness for amiga-ide. Loads ONLY local assets
+       (./boot.js -> ./vendor/sae, ./roms, ./disks). Shares nothing. -->
+  <div id="sae-host"></div>
+  <div class="hud">
+    <div id="status" class="status">Booting…</div>
+    <div class="bar"><div id="progress-bar"></div></div>
+  </div>
+  <!-- load boot.js fresh each time (dev: defeat aggressive browser caching) -->
+  <script>(function(){var s=document.createElement('script');s.src='./boot.js?cb='+Date.now();s.async=false;document.head.appendChild(s);})();</script>
+</body>
+</html>

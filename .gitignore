@@ -1,0 +1,16 @@
+# Copyrighted system images — never commit. Buy legally at
+# https://www.amigaforever.com/plus/ and load them via the IDE (they persist
+# in your browser's disk box).
+roms/
+disks/
+*.rom
+*.adf
+*.hdf
+
+# vendored SAE emulator engine (separate project)
+vendor/
+
+# local experiments / build scratch
+build/
+*.log
+.claude/
