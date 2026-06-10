@@ -2,5 +2,5 @@
 	path = ecomp
 	url = https://github.com/gin0115/Amiga-E-Compiler-WebBased.git
 [submodule "help"]
-	path = help
+	path = docs
 	url = https://github.com/gin0115/Amiga-E-Docs-Site.git
