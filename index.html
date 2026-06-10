@@ -358,6 +358,7 @@
       <div class="titlebar">Emulator <span id="emuStatus" class="meta"></span>
         <div class="spacer"></div>
         <span id="captureState" class="pill">click the screen to capture input</span>
+        <button id="btnFullscreen" title="fullscreen: Esc is fully captured for the Amiga (Keyboard Lock)">⛶ fullscreen</button>
       </div>
       <div class="body"><div id="emuHost"><span class="empty">Boot Workbench, or Compile &amp; Run (DOS) to boot straight into your program.</span></div></div>
     </section>
@@ -1084,15 +1085,52 @@ function setCapture(on) {
   if (on && document.activeElement) document.activeElement.blur();
 }
 // capture state follows the pointer lock itself — locked means captured
+let releasedByKey = false;     // End pressed (deliberate release)
+let synthesizing = false;      // forwarding a synthetic Esc to the Amiga
 document.addEventListener('pointerlockchange', () => {
-  setCapture(!!document.pointerLockElement);
+  const locked = !!document.pointerLockElement;
+  if (!locked && emuCaptured && !releasedByKey && !document.fullscreenElement) {
+    // the browser broke the lock — that was an Esc meant for the AMIGA.
+    // forward it so the program still receives the keypress.
+    synthesizing = true;
+    for (const t of ['keydown', 'keyup']) {
+      document.dispatchEvent(new KeyboardEvent(t, { key: 'Escape', keyCode: 27, which: 27, bubbles: true }));
+    }
+    synthesizing = false;
+    log('Esc went to the Amiga — click the screen to recapture (use ⛶ fullscreen to keep Esc captured)', 'dim');
+  }
+  releasedByKey = false;
+  setCapture(locked);
+});
+
+// fullscreen game mode: Keyboard Lock keeps Esc INSIDE the emulator
+const kbLock = navigator.keyboard && navigator.keyboard.lock ? navigator.keyboard : null;
+$('btnFullscreen').onclick = async () => {
+  if (document.fullscreenElement) { document.exitFullscreen(); return; }
+  await $('emuPane').requestFullscreen();
+};
+document.addEventListener('fullscreenchange', async () => {
+  if (document.fullscreenElement) {
+    if (kbLock) {
+      try { await kbLock.lock(['Escape']); log('fullscreen: Esc is captured for the Amiga', 'ok'); }
+      catch { log('keyboard lock unavailable — Esc may exit fullscreen', 'dim'); }
+    }
+  } else {
+    if (kbLock) try { kbLock.unlock(); } catch { /* fine */ }
+    if (document.exitPointerLock) document.exitPointerLock();
+  }
 });
 for (const type of ['keydown', 'keyup', 'keypress']) {
   document.addEventListener(type, e => {
     if (!window.sae) return;                       // nothing running: normal page
+    if (synthesizing) return;                      // forwarded Esc -> SAE
     if (emuCaptured) {
       if (e.key === relKey()) {                    // the safe leave key
-        if (type === 'keydown' && document.exitPointerLock) document.exitPointerLock();
+        if (type === 'keydown') {
+          releasedByKey = true;
+          if (document.exitPointerLock) document.exitPointerLock();
+          if (document.fullscreenElement) document.exitFullscreen();
+        }
         e.stopImmediatePropagation();
         e.preventDefault();
       }
