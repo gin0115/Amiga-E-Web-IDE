@@ -5,30 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Amiga E Web IDE</title>
   <style>
-    :root { color-scheme: dark; }
+    :root {
+      color-scheme: dark;
+      --bg: var(--bg); --panel: var(--panel); --panel-head: var(--panel-head); --editor-bg: var(--editor-bg);
+      --control: var(--control); --control-hover: var(--control-hover); --primary: var(--primary); --primary-border: var(--primary-border);
+      --border: var(--border); --border-subtle: var(--border-subtle); --hairline: var(--hairline);
+      --text: var(--text); --text-bright: var(--text-bright); --muted: var(--muted); --dim: var(--dim);
+      --go: var(--go); --go-border: var(--go-border); --go-text: var(--go-text);
+      --accent: var(--accent); --ok: var(--ok); --err: var(--err); --console-text: var(--console-text);
+      --syn-keyword: var(--syn-keyword); --syn-builtin: var(--syn-builtin); --syn-string: var(--syn-string);
+      --syn-string2: var(--syn-string2); --syn-number: var(--syn-number); --syn-comment: var(--syn-comment);
+      --syn-operator: var(--syn-operator); --syn-atom: var(--syn-atom); --syn-var: var(--syn-var);
+      --gutter-text: var(--gutter-text); --cursor: var(--syn-builtin); --selection: var(--selection);
+    }
+    [data-theme="light"] {
+      color-scheme: light;
+      --bg: #f2f2f7; --panel: #ffffff; --panel-head: #e4e4ee; --editor-bg: #fbfbfe;
+      --control: #e8e8f0; --control-hover: #d8d8e4; --primary: #c8d4f8; --primary-border: #7a8ac0;
+      --border: #b8b8cc; --border-subtle: #d0d0de; --hairline: #e0e0ea;
+      --text: #2a2a3a; --text-bright: #11111c; --muted: #5a5a74; --dim: #8a8aa0;
+      --go: #d4eed8; --go-border: #5a9a6a; --go-text: #1a5a2a;
+      --accent: #3a5bdf; --ok: #1a7a30; --err: #c03a3a; --console-text: #2a4a2a;
+      --syn-keyword: #c05a10; --syn-builtin: #157a35; --syn-string: #8a6a00;
+      --syn-string2: #a05a20; --syn-number: #7a30c0; --syn-comment: #8a9a8a;
+      --syn-operator: #2060c0; --syn-atom: #c02060; --syn-var: #2a2a3a;
+      --gutter-text: #a0a0b8; --cursor: #157a35; --selection: #c8d8f8;
+    }
+    [data-theme="workbench"] {
+      color-scheme: light;
+      --bg: #aaaaaa; --panel: #b8b8b8; --panel-head: #0055aa; --editor-bg: #c0c0c0;
+      --control: #999999; --control-hover: #888888; --primary: #0055aa; --primary-border: #003377;
+      --border: #555555; --border-subtle: #777777; --hairline: #888888;
+      --text: #111111; --text-bright: #000000; --muted: #333333; --dim: #555555;
+      --go: #ff8800; --go-border: #aa5500; --go-text: #000000;
+      --accent: #0055aa; --ok: #005500; --err: #aa0000; --console-text: #111111;
+      --syn-keyword: #0055aa; --syn-builtin: #884400; --syn-string: #555500;
+      --syn-string2: #774400; --syn-number: #550088; --syn-comment: #666666;
+      --syn-operator: #003377; --syn-atom: #aa0055; --syn-var: #111111;
+      --gutter-text: #444444; --cursor: #ff8800; --selection: #88aadd;
+    }
+    [data-theme="solarized"] {
+      color-scheme: dark;
+      --bg: #002b36; --panel: #073642; --panel-head: #00212b; --editor-bg: #002b36;
+      --control: #0a4250; --control-hover: #155a6a; --primary: #155a6a; --primary-border: #2aa198;
+      --border: #2a5a66; --border-subtle: #15454f; --hairline: #0a3540;
+      --text: #93a1a1; --text-bright: #eee8d5; --muted: #657b83; --dim: #586e75;
+      --go: #1a4a30; --go-border: #859900; --go-text: #b8e8a0;
+      --accent: #268bd2; --ok: #859900; --err: #dc322f; --console-text: #93a1a1;
+      --syn-keyword: #cb4b16; --syn-builtin: #859900; --syn-string: #b58900;
+      --syn-string2: #cb4b16; --syn-number: #d33682; --syn-comment: #586e75;
+      --syn-operator: #268bd2; --syn-atom: #d33682; --syn-var: #93a1a1;
+      --gutter-text: #586e75; --cursor: #859900; --selection: #155a6a;
+    }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
-      margin: 0; background: #0a0a14; color: #c7c7d9;
+      margin: 0; background: var(--bg); color: var(--text);
       font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
       font-size: 13px; display: flex; flex-direction: column;
     }
     header {
-      padding: 6px 12px; border-bottom: 1px solid #3a3a5a;
+      padding: 6px 12px; border-bottom: 1px solid var(--border);
       display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     }
-    header h1 { font-size: 14px; margin: 0; color: #e8e8f4; font-weight: 600; }
+    header h1 { font-size: 14px; margin: 0; color: var(--text-bright); font-weight: 600; }
     header .spacer { flex: 1; }
     button, label.btn, select {
       font: inherit; cursor: pointer; padding: 5px 10px; border-radius: 4px;
-      border: 1px solid #3a3a5a; background: #16162a; color: #c7c7d9;
+      border: 1px solid var(--border); background: var(--control); color: var(--text);
     }
-    button:hover, label.btn:hover { background: #20203a; }
+    button:hover, label.btn:hover { background: var(--control-hover); }
     button:disabled { opacity: .5; cursor: default; }
-    button.primary { background: #2a2a55; border-color: #5a5a8a; color: #e8e8f4; }
-    button.primary:hover { background: #34346a; }
-    button.go { background: #1d4023; border-color: #3a7a4a; color: #b8ffc8; }
-    button.go:hover { background: #265a30; }
+    button.primary { background: var(--primary); border-color: var(--primary-border); color: var(--text-bright); }
+    button.primary:hover { background: var(--primary); }
+    button.go { background: var(--go); border-color: var(--go-border); color: var(--go-text); }
+    button.go:hover { background: var(--go); }
 
     /* layout: top row (editor | right column) over full-width emulator */
     main {
@@ -36,53 +87,68 @@
       grid-template-columns: var(--c1, 55%) 6px 1fr;
       grid-template-rows: var(--r1, 1fr) 6px var(--r2, 46%);
     }
-    .gutter { background: #3a3a5a; z-index: 5; }
-    .gutter:hover, .gutter.active { background: #5a7bff; }
+    .gutter { background: var(--border); z-index: 5; }
+    .gutter:hover, .gutter.active { background: var(--accent); }
     .gutter-v { grid-column: 2; grid-row: 1; cursor: col-resize; }
     .gutter-h { grid-row: 2; grid-column: 1 / 4; cursor: row-resize; z-index: 6; }
     body.resizing { user-select: none; }
     body.resizing canvas, body.resizing iframe { pointer-events: none; }
 
-    .pane { background: #0a0a14; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+    .pane { background: var(--bg); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
     .pane > .titlebar {
       padding: 4px 10px; font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
-      color: #8a8ab0; border-bottom: 1px solid #1c1c2e; display: flex; align-items: center; gap: 8px;
+      color: var(--muted); border-bottom: 1px solid var(--hairline); display: flex; align-items: center; gap: 8px;
       flex-shrink: 0;
     }
     .pane > .titlebar .spacer { flex: 1; }
-    .pane > .titlebar button { padding: 0 4px; border: 0; background: none; color: #6a6a88; font-size: 11px; }
-    .pane > .titlebar button:hover { color: #e8e8f4; }
+    .pane > .titlebar button { padding: 0 4px; border: 0; background: none; color: var(--dim); font-size: 11px; }
+    .pane > .titlebar button:hover { color: var(--text-bright); }
     .pane > .body { flex: 1; min-height: 0; overflow: auto; }
 
     #editorPane { grid-row: 1; grid-column: 1; }
     #rightPane  { grid-row: 1; grid-column: 3; overflow: auto; }
     #emuPane    { grid-row: 3; grid-column: 1 / 4; }
 
-    #editor {
-      width: 100%; height: 100%; resize: none; border: 0; outline: 0;
-      background: #0c0c18; color: #d8d8ec; padding: 10px;
-      font-family: inherit; font-size: 13px; line-height: 1.45; tab-size: 2;
+    #editorHost { height: 100%; }
+    .CodeMirror {
+      height: 100%; background: var(--editor-bg); color: var(--syn-var);
+      font-family: inherit; font-size: 13px; line-height: 1.5;
     }
+    .CodeMirror-gutters { background: var(--bg); border-right: 1px solid var(--hairline); }
+    .CodeMirror-linenumber { color: var(--gutter-text); }
+    .CodeMirror-cursor { border-left: 2px solid var(--cursor); }
+    .CodeMirror-selected { background: var(--selection) !important; }
+    .CodeMirror-activeline-background { background: var(--panel); }
+    .cm-s-default .cm-keyword  { color: var(--syn-keyword); font-weight: 600; }  /* PROC IF FOR */
+    .cm-s-default .cm-builtin  { color: var(--syn-builtin); }                    /* WriteF OpenW */
+    .cm-s-default .cm-variable { color: var(--syn-var); }
+    .cm-s-default .cm-def      { color: var(--syn-operator); }                    /* lowercase idents after DEF */
+    .cm-s-default .cm-string   { color: var(--syn-string); }
+    .cm-s-default .cm-string-2 { color: var(--syn-string2); }                    /* "char" consts */
+    .cm-s-default .cm-number   { color: var(--syn-number); }
+    .cm-s-default .cm-comment  { color: var(--syn-comment); font-style: italic; }
+    .cm-s-default .cm-operator { color: var(--syn-operator); }
+    .cm-s-default .cm-atom     { color: var(--syn-atom); }                    /* NIL TRUE self */
 
     /* right column: distinct cards, accent-coded headers */
-    #rightPane { background: #07070f; }
+    #rightPane { background: var(--bg); }
     #rightPane > .section {
-      margin: 8px; border: 1px solid #2a2a44; border-radius: 8px;
-      background: #10101e; overflow: hidden;
+      margin: 8px; border: 1px solid var(--border-subtle); border-radius: 8px;
+      background: var(--panel); overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,.45);
     }
     .section > .sect-title {
       padding: 7px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
-      color: #c7c7d9; font-weight: 600; display: flex; align-items: center; gap: 8px;
-      cursor: pointer; background: #181830; border-bottom: 1px solid #2a2a44;
-      border-left: 3px solid #5a5a8a;
+      color: var(--text); font-weight: 600; display: flex; align-items: center; gap: 8px;
+      cursor: pointer; background: var(--panel-head); border-bottom: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--primary-border);
     }
-    #sectControls > .sect-title { border-left-color: #3a7a4a; }
-    #sectCompiler > .sect-title { border-left-color: #5a7bff; }
+    #sectControls > .sect-title { border-left-color: var(--go-border); }
+    #sectCompiler > .sect-title { border-left-color: var(--accent); }
     #sectFs       > .sect-title { border-left-color: #c8a23a; }
     #sectBox      > .sect-title { border-left-color: #9a5acf; }
-    #sectSettings > .sect-title { border-left-color: #6a6a88; }
-    .section > .sect-title:hover { background: #1e1e3c; }
+    #sectSettings > .sect-title { border-left-color: var(--dim); }
+    .section > .sect-title:hover { background: var(--control-hover); }
     .section > .sect-title .spacer { flex: 1; }
     .section > .sect-body { padding: 8px 12px 12px; }
     .section.collapsed > .sect-body { display: none; }
@@ -91,46 +157,51 @@
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .controls-grid button, .controls-grid label.btn { text-align: center; }
     .row { display: flex; gap: 6px; align-items: center; margin: 4px 0; flex-wrap: wrap; }
-    .row label { color: #8a8ab0; font-size: 12px; }
-    .pill { font-size: 10px; padding: 1px 6px; border: 1px solid #3a3a5a; border-radius: 8px; color: #8a8ab0; }
-    .pill.ok { color: #8affa0; border-color: #3a7a4a; }
-    .pill.miss { color: #ff8a8a; border-color: #7a3a3a; }
+    .row label { color: var(--muted); font-size: 12px; }
+    .pill { font-size: 10px; padding: 1px 6px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); }
+    .pill.ok { color: var(--ok); border-color: var(--go-border); }
+    .pill.miss { color: var(--err); border-color: #7a3a3a; }
 
     #console {
       margin: 0; padding: 6px 10px; white-space: pre-wrap; word-break: break-word;
-      font-size: 12px; line-height: 1.4; color: #b8c8b8; max-height: 180px; overflow: auto;
-      background: #0b0b16; border-radius: 0 0 7px 7px;
+      font-size: 12px; line-height: 1.4; color: var(--console-text); max-height: 180px; overflow: auto;
+      background: var(--editor-bg); border-radius: 0 0 7px 7px;
     }
-    #console .err { color: #ff8a8a; }
-    #console .ok  { color: #8affa0; }
-    #console .dim { color: #6a6a88; }
+    #console .err { color: var(--err); }
+    #console .ok  { color: var(--ok); }
+    #console .dim { color: var(--dim); }
 
     #fsList, #boxList { list-style: none; margin: 0; padding: 2px; }
     #fsList li, #boxList li {
       display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 3px; cursor: pointer;
     }
-    #fsList li:hover, #boxList li:hover { background: #16162a; }
-    #fsList li.active { background: #20203a; }
+    #fsList li:hover, #boxList li:hover { background: var(--control); }
+    #fsList li.active { background: var(--control-hover); }
     .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .meta { color: #6a6a88; font-size: 11px; }
-    .tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; border: 1px solid #3a3a5a; color: #8a8ab0; }
+    .meta { color: var(--dim); font-size: 11px; }
+    .tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); color: var(--muted); }
     .tag.bin { color: #ffc98a; border-color: #6a5a3a; }
-    .tag.rom { color: #8ad0ff; border-color: #3a5a7a; }
-    .tag.disk { color: #c8a0ff; border-color: #5a3a7a; }
+    .tag.rom { color: var(--syn-operator); border-color: #3a5a7a; }
+    .tag.disk { color: var(--syn-number); border-color: #5a3a7a; }
     .tag.hdf { color: #a0ffc8; border-color: #3a7a5a; }
-    .iconbtn { border: 0; background: none; color: #6a6a88; padding: 0 3px; cursor: pointer; }
-    .iconbtn:hover { color: #e8e8f4; }
+    .tag.project { color: #ffa0c8; border-color: #7a3a5a; }
+    .iconbtn { border: 0; background: none; color: var(--dim); padding: 0 3px; cursor: pointer; }
+    .iconbtn:hover { color: var(--text-bright); }
 
-    #emuHost { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; }
-    #emuHost canvas { max-height: 100%; }
-    .empty { color: #6a6a88; padding: 12px; }
+    #emuHost { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; text-align: center; }
+    #emuHost > * { margin: 0 auto; }
+    #emuHost canvas { max-height: 100%; margin: 0 auto; display: block; }
+    .empty { color: var(--dim); padding: 12px; }
     .drivebar { display: inline-flex; gap: 4px; }
-    .drivechip { font-size: 10px; padding: 1px 6px; border: 1px solid #3a3a5a; border-radius: 3px; background: #16162a; color: #8a8ab0; cursor: pointer; }
-    .drivechip:hover { background: #20203a; color: #e8e8f4; }
+    .drivechip { font-size: 10px; padding: 1px 6px; border: 1px solid var(--border); border-radius: 3px; background: var(--control); color: var(--muted); cursor: pointer; }
+    .drivechip:hover { background: var(--control-hover); color: var(--text-bright); }
     .drivechip.df3 { border-color: #6a5a3a; color: #ffc98a; }
     select { padding: 3px 6px; }
-    input[type=number] { width: 56px; font: inherit; background: #16162a; color: #c7c7d9; border: 1px solid #3a3a5a; border-radius: 4px; padding: 3px 6px; }
+    input[type=number] { width: 56px; font: inherit; background: var(--control); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; }
   </style>
+  <link rel="stylesheet" href="./lib/codemirror/codemirror.min.css" />
+  <script src="./lib/codemirror/codemirror.min.js"></script>
+  <script src="./lib/codemirror/simple.min.js"></script>
   <script src="./adf.js"></script>
   <script src="./diskbox.js"></script>
   <script src="./boot.js"></script>
@@ -148,6 +219,12 @@
       <option value="float">Floating point</option>
     </select>
     <div class="spacer"></div>
+    <select id="theme" title="theme">
+      <option value="dark">Dark</option>
+      <option value="light">Light</option>
+      <option value="workbench">Amiga Workbench</option>
+      <option value="solarized">Solarized</option>
+    </select>
     <span id="romState" class="pill miss">no ROM</span>
     <span id="emuState" class="pill">emulator idle</span>
   </header>
@@ -156,7 +233,7 @@
     <!-- LEFT: editor -->
     <section id="editorPane" class="pane">
       <div class="titlebar"><span id="editorName">main.e</span><div class="spacer"></div><span id="editorInfo"></span></div>
-      <div class="body"><textarea id="editor" spellcheck="false"></textarea></div>
+      <div class="body"><div id="editorHost"></div></div>
     </section>
 
     <!-- RIGHT: controls / compiler / files / disk box / settings -->
@@ -172,7 +249,7 @@
           </div>
           <div class="row">
             <label class="btn">Set Kickstart ROM…<input id="romInput" type="file" hidden /></label>
-            <a href="https://www.amigaforever.com/plus/" target="_blank" rel="noopener" class="meta" style="color:#8ad0ff">need ROMs/Workbench? → Amiga Forever</a>
+            <a href="https://www.amigaforever.com/plus/" target="_blank" rel="noopener" title="buy Kickstart ROMs and Workbench legally — Amiga Forever (Cloanto)" style="color:var(--syn-operator);font-size:10px;text-decoration:none;opacity:.8">ROMs? → Amiga Forever</a>
             <label class="btn">Add disk (ADF)…<input id="diskInput" type="file" accept=".adf" hidden /></label>
             <label class="btn">Add hard disk (HDF)…<input id="hdfInput" type="file" accept=".hdf" hidden /></label>
           </div>
@@ -185,13 +262,19 @@
       </div>
 
       <div class="section" id="sectCompiler">
-        <div class="sect-title">Compiler <div class="spacer"></div><button id="btnClear">clear</button></div>
+        <div class="sect-title">Compiler
+          <div class="spacer"></div>
+          <label style="text-transform:none;letter-spacing:0;color:#8a8ab0">output:</label>
+          <input id="outName" type="text" value="prog" style="width:96px;font:inherit;background:#0c0c18;color:#c7c7d9;border:1px solid #3a3a5a;border-radius:4px;padding:2px 6px" onclick="event.stopPropagation()" />
+          <button id="btnClear">clear</button>
+        </div>
         <pre id="console"></pre>
       </div>
 
       <div class="section" id="sectFs">
         <div class="sect-title">Project files
           <div class="spacer"></div>
+          <button id="btnSaveProj" title="save all files + settings to the disk box">save project</button>
           <button id="btnNew">+ new</button>
           <label class="iconbtn" style="cursor:pointer">import<input id="importInput" type="file" multiple hidden /></label>
         </div>
@@ -222,6 +305,10 @@
             <label><input id="setHires" type="checkbox" checked /> hi-res</label>
             <label><input id="setVdouble" type="checkbox" checked /> double scan</label>
             <label><input id="setNtsc" type="checkbox" /> NTSC</label>
+          </div>
+          <div class="row">
+            <label><input id="setTurbo" type="checkbox" checked /> turbo floppy (fast boots)</label>
+            <label><input id="setAudio" type="checkbox" checked /> audio</label>
             <span class="meta">applies on next boot</span>
           </div>
         </div>
@@ -246,7 +333,45 @@ import { bootableAdf } from './ecomp/src/adf.js';
 import { readEmod } from './ecomp/src/emod.js';
 
 const $ = id => document.getElementById(id);
-const editor = $('editor'), editorName = $('editorName'), editorInfo = $('editorInfo');
+const editorName = $('editorName'), editorInfo = $('editorInfo');
+
+// ---- Amiga E syntax (everything the compiler taught us) ----
+const E_KEYWORDS = ('PROC ENDPROC IF THEN ELSE ELSEIF ENDIF FOR TO STEP DO ENDFOR WHILE ENDWHILE ' +
+  'REPEAT UNTIL LOOP ENDLOOP SELECT CASE DEFAULT ENDSELECT DEF MODULE OPT OBJECT ENDOBJECT ' +
+  'EXPORT HANDLE EXCEPT RAISE JUMP INC DEC RETURN EXIT NEW END SUPER SIZEOF ENUM CONST SET IS ' +
+  'OF PTR LONG INT CHAR LIST STRING ARRAY VOID AND OR BUT NOT INCBIN INCLUDE LIBRARY').split(' ');
+CodeMirror.defineSimpleMode('amigae', {
+  start: [
+    { regex: /->.*/, token: 'comment' },
+    { regex: /\/\*/, token: 'comment', push: 'comment' },
+    { regex: /'(?:[^\\']|\\.)*'/, token: 'string' },
+    { regex: /"(?:[^\\"]|\\.)*"/, token: 'string-2' },
+    { regex: /\$[0-9a-fA-F]+|%[01]+|\d+\.\d+|\d+/, token: 'number' },
+    { regex: /\b(NIL|TRUE|FALSE|EMPTY|ALL|self|exception|exceptioninfo)\b/, token: 'atom' },
+    { regex: new RegExp('\\b(' + E_KEYWORDS.join('|') + ')\\b'), token: 'keyword' },
+    { regex: /\b[A-Z][a-z]\w*\b/, token: 'builtin' },
+    { regex: /`|<=>|[-+*\/=<>!&|:^]+/, token: 'operator' },
+    { regex: /\b[a-z_]\w*\b/, token: 'variable' },
+  ],
+  comment: [
+    { regex: /\/\*/, token: 'comment', push: 'comment' },   // E comments NEST
+    { regex: /\*\//, token: 'comment', pop: true },
+    { regex: /./, token: 'comment' },
+  ],
+  meta: { lineComment: '->' },
+});
+const cm = CodeMirror($('editorHost'), {
+  value: '', mode: 'amigae', lineNumbers: true, indentUnit: 2, tabSize: 2,
+  styleActiveLine: false, matchBrackets: false,
+});
+// drop-in shim: the rest of the IDE keeps talking to `editor` as before
+const editor = {
+  get value() { return cm.getValue(); },
+  set value(v) { if (cm.getValue() !== v) cm.setValue(v); },
+  get disabled() { return cm.getOption('readOnly') === true; },
+  set disabled(b) { cm.setOption('readOnly', b ? 'nocursor' : false); },
+  addEventListener(ev, fn) { if (ev === 'input') cm.on('change', fn); },
+};
 const consoleEl = $('console');
 
 function log(msg, cls) {
@@ -418,13 +543,18 @@ async function compileMain() {
     },
   });
   if (sem.errors.length) { sem.errors.slice(0, 6).forEach(er => log('main.e:' + (er.line ?? '?') + ' ' + er.msg, 'err')); return null; }
+  for (const w of (sem.warnings ?? [])) log('warning: main.e:' + (w.line ?? '?') + ' ' + w.msg, 'dim');
   const { bin, errors } = compileProgram(program, sem);
   if (errors.length) { errors.slice(0, 6).forEach(er => log('codegen: ' + er.msg, 'err')); return null; }
-  log(`compiled main.e → ${bin.length} bytes (${(performance.now() - t0).toFixed(1)}ms)`, 'ok');
+  const name = outBinName();
+  log(`compiled main.e → ${name} (${bin.length} bytes, ${(performance.now() - t0).toFixed(1)}ms)`, 'ok');
   log('E modules © Wouter van Oortmerssen — used with his kind permission', 'dim');
-  FS['main.bin'] = bin;
+  FS[name + '.bin'] = bin;
   renderFS();
   return bin;
+}
+function outBinName() {
+  return ($('outName').value.trim() || 'prog').replace(/[^\w.-]/g, '').slice(0, 24) || 'prog';
 }
 
 // ---------------- emulator state + images ----------------
@@ -434,6 +564,8 @@ $('setFast').value = settings.fastMB != null ? settings.fastMB : 2;
 $('setHires').checked = settings.hires !== false;
 $('setVdouble').checked = settings.vdouble !== false;
 $('setNtsc').checked = !!settings.ntsc;
+$('setTurbo').checked = settings.turboFloppy !== false;
+$('setAudio').checked = settings.audio !== false;
 function readSettings() {
   const s = {
     model: $('setModel').value,
@@ -441,11 +573,13 @@ function readSettings() {
     hires: $('setHires').checked,
     vdouble: $('setVdouble').checked,
     ntsc: $('setNtsc').checked,
+    turboFloppy: $('setTurbo').checked,
+    audio: $('setAudio').checked,
   };
   localStorage.setItem('ide-settings', JSON.stringify(s));
   return s;
 }
-for (const id of ['setModel', 'setFast', 'setHires', 'setVdouble', 'setNtsc']) {
+for (const id of ['setModel', 'setFast', 'setHires', 'setVdouble', 'setNtsc', 'setTurbo', 'setAudio']) {
   $(id).addEventListener('change', readSettings);
 }
 for (const sect of document.querySelectorAll('.section > .sect-title')) {
@@ -464,7 +598,7 @@ window.onEmuStatus = (msg, isError) => {
 // drives[0..2] = {name, bytes} chosen by the user (DF0 = boot disk);
 // DF3 stays reserved for compiled output
 const drives = [null, null, null];
-const pending = { hdf: null, hdfName: null };
+const pending = { hdf: null, hdfName: null, hdf2: null, hdf2Name: null };
 let wbBooted = false;
 
 async function getRom() {
@@ -627,7 +761,8 @@ async function bootWb() {
   const ok = await bootEmulator(
     { rom, df0: wb, df0Name: drives[0] ? drives[0].name : 'workbench.adf',
       df1: drives[1] && drives[1].bytes, df2: drives[2] && drives[2].bytes,
-      hdf: pending.hdf, hdfName: pending.hdfName },
+      hdf: pending.hdf, hdfName: pending.hdfName,
+      hdf2: pending.hdf2, hdf2Name: pending.hdf2Name },
     readSettings(), 'emuHost');
   wbBooted = ok;
   setTimeout(renderDrives, 500);
@@ -660,40 +795,120 @@ $('btnRunDos').onclick = async () => {
   setTimeout(renderDrives, 500);
 };
 
-$('btnRunWb').onclick = async () => {
+function chooseDelivery(anchorEvent) {
+  // asked only when running as WB — floppy is instant, HDD reboots
+  return new Promise(resolve => {
+    const menu = document.createElement('div');
+    menu.style.cssText = 'position:fixed;z-index:99;background:#16162a;border:1px solid #5a5a8a;'
+      + 'border-radius:6px;padding:4px;box-shadow:0 4px 16px #000';
+    const add = (label, val) => {
+      const it = document.createElement('div');
+      it.textContent = label;
+      it.style.cssText = 'padding:6px 14px;cursor:pointer;border-radius:4px';
+      it.onmouseenter = () => it.style.background = '#2a2a55';
+      it.onmouseleave = () => it.style.background = '';
+      it.onclick = () => { menu.remove(); resolve(val); };
+      menu.appendChild(it);
+    };
+    add('deliver on floppy — DF3, instant', 'floppy');
+    add('deliver on HDD image — reboots WB', 'hdd');
+    document.body.appendChild(menu);
+    menu.style.left = Math.min(anchorEvent.clientX, innerWidth - 280) + 'px';
+    menu.style.top = (anchorEvent.clientY + 8) + 'px';
+    const close = e => {
+      if (!menu.contains(e.target)) { menu.remove(); window.removeEventListener('mousedown', close); resolve(null); }
+    };
+    setTimeout(() => window.addEventListener('mousedown', close), 0);
+  });
+}
+
+$('btnRunWb').onclick = async ev => {
   const bin = await compileMain();
   if (!bin) return;
-  if (!window.sae || !wbBooted) {
-    log('Workbench not running — booting it first…', 'dim');
-    if (!await bootWb()) return;
-    log('when the desktop appears, hit Compile & Run (WB) again', 'dim');
-    return;
+  const mode = await chooseDelivery(ev);
+  if (!mode) return;
+  const name = outBinName();
+  await DiskBox.put('bin', name + '.bin', bin);
+  if (mode === 'hdd') {
+    // fresh 1MB hardfile as a second IDE unit — boots WB with it attached
+    pending.hdf2 = window.buildHDF([{ name, bytes: bin }], 'COMPILED');
+    pending.hdf2Name = 'compiled.hdf';
+    log('COMPILED hard disk built — booting Workbench with it attached…', 'ok');
+    await bootWb();
+    log(`when the desktop appears, open the COMPILED drive and run "${name}"`, 'dim');
+  } else {
+    if (!window.sae || !wbBooted) {
+      log('Workbench not running — booting it first; hit Compile & Run (WB) again when the desktop is up', 'dim');
+      await bootWb();
+      return;
+    }
+    const adf = window.buildADF([{ name, bytes: bin }], 'COMPILED');
+    mountADF(3, adf, 'COMPILED.adf');
+    log(`COMPILED disk mounted on DF3: — open it on the desktop and run "${name}"`, 'ok');
   }
-  // deliver into the running system: COMPILED disk on DF3 (auto, no prompts)
-  const adf = window.buildADF([{ name: 'prog', bytes: bin }], 'COMPILED');
-  mountADF(3, adf, 'COMPILED.adf');
-  await DiskBox.put('bin', 'main.bin', bin);
   renderBox();
   renderDrives();
-  log('COMPILED disk mounted on DF3: — open it on the Workbench desktop and run "prog" (Show All Files)', 'ok');
 };
 
 $('btnDlBin').onclick = async () => {
   const bin = await compileMain();
   if (!bin) return;
-  await DiskBox.put('bin', 'main.bin', bin);
+  const name = outBinName();
+  await DiskBox.put('bin', name + '.bin', bin);
   renderBox();
-  download('main.bin', bin);
+  download(name + '.bin', bin);
 };
 
 $('btnDlAdf').onclick = async () => {
   const bin = await compileMain();
   if (!bin) return;
-  const adf = bootableAdf(bin, { volume: 'ECOMP', command: 'prog' });
-  await DiskBox.put('disk', 'compiled.adf', adf);
+  const name = outBinName();
+  const adf = bootableAdf(bin, { volume: 'ECOMP', command: name });
+  await DiskBox.put('disk', name + '.adf', adf);
   renderBox();
-  download('compiled.adf', adf);
+  download(name + '.adf', adf);
 };
+
+// ---------------- projects: files + emulator + compiler config ----------------
+$('btnSaveProj').onclick = async () => {
+  const name = prompt('Project name:', localStorage.getItem('ide-project') || 'my-project');
+  if (!name) return;
+  if (current && isText(FS[current])) FS[current] = editor.value;
+  const textFiles = {};
+  for (const [k, v] of Object.entries(FS)) if (isText(v)) textFiles[k] = v;
+  const proj = {
+    v: 1,
+    files: textFiles,
+    settings: readSettings(),
+    outName: $('outName').value,
+    saved: Date.now(),
+  };
+  await DiskBox.put('project', name + '.project',
+    new TextEncoder().encode(JSON.stringify(proj)),
+    Object.keys(textFiles).length + ' files');
+  localStorage.setItem('ide-project', name);
+  log(`project "${name}" saved to the disk box`, 'ok');
+  renderBox();
+};
+async function loadProject(boxName) {
+  const bytes = await DiskBox.get('project', boxName);
+  if (!bytes) return;
+  const proj = JSON.parse(new TextDecoder().decode(bytes));
+  FS = { ...proj.files };
+  $('outName').value = proj.outName || 'prog';
+  if (proj.settings) {
+    localStorage.setItem('ide-settings', JSON.stringify(proj.settings));
+    $('setModel').value = proj.settings.model || 'A1200';
+    $('setFast').value = proj.settings.fastMB ?? 2;
+    $('setHires').checked = proj.settings.hires !== false;
+    $('setVdouble').checked = proj.settings.vdouble !== false;
+    $('setNtsc').checked = !!proj.settings.ntsc;
+    $('setTurbo').checked = proj.settings.turboFloppy !== false;
+    $('setAudio').checked = proj.settings.audio !== false;
+  }
+  loadIntoEditor(FS['main.e'] !== undefined ? 'main.e' : Object.keys(FS)[0], true);
+  log(`project "${boxName.replace(/\.project$/, '')}" loaded (files + settings)`, 'ok');
+}
 
 // ---------------- disk box UI ----------------
 async function renderBox() {
@@ -706,6 +921,25 @@ async function renderBox() {
     li.innerHTML = `<span class="tag ${it.category}">${it.category.toUpperCase()}</span>`
       + `<span class="name"></span><span class="meta">${fmtSize(it.size)}</span>`;
     li.querySelector('.name').textContent = it.name;
+    if (it.desc) {
+      li.title = it.desc;
+      const d = document.createElement('span');
+      d.className = 'meta';
+      d.textContent = '— ' + (it.desc.length > 26 ? it.desc.slice(0, 26) + '…' : it.desc);
+      li.querySelector('.name').appendChild(d);
+    }
+    const ed = document.createElement('button');
+    ed.className = 'iconbtn'; ed.title = 'rename / describe'; ed.textContent = '✎';
+    ed.onclick = async e => {
+      e.stopPropagation();
+      const newName = prompt('Name:', it.name);
+      if (newName === null) return;
+      const desc = prompt('Description:', it.desc || '');
+      if (desc === null) return;
+      await DiskBox.update(it.category, it.name, newName.trim() || it.name, desc.trim());
+      renderBox();
+    };
+    li.appendChild(ed);
     const use = document.createElement('button');
     use.className = 'iconbtn'; use.title = 'use'; use.textContent = '↻';
     use.onclick = async e => {
@@ -728,6 +962,8 @@ async function renderBox() {
       } else if (it.category === 'hdf') {
         pending.hdf = bytes; pending.hdfName = it.name;
         log(it.name + ' set as DH0: for next boot', 'ok');
+      } else if (it.category === 'project') {
+        await loadProject(it.name);
       } else if (it.category === 'bin') {
         FS[it.name] = bytes; renderFS();
         log(it.name + ' loaded into project files', 'ok');
@@ -757,12 +993,24 @@ $('boxInput').onchange = async e => {
   for (const f of e.target.files) {
     const bytes = new Uint8Array(await f.arrayBuffer());
     const cat = /\.rom$/i.test(f.name) ? 'rom' : /\.adf$/i.test(f.name) ? 'disk'
-      : /\.hdf$/i.test(f.name) ? 'hdf' : 'bin';
+      : /\.hdf$/i.test(f.name) ? 'hdf' : /\.project$/i.test(f.name) ? 'project' : 'bin';
     await DiskBox.put(cat, f.name, bytes);
   }
   renderBox();
   e.target.value = '';
 };
+
+// ---------------- theme ----------------
+const themeSel = $('theme');
+themeSel.value = localStorage.getItem('ide-theme') || 'dark';
+function applyTheme() {
+  document.documentElement.dataset.theme = themeSel.value;
+  localStorage.setItem('ide-theme', themeSel.value);
+  if (window.cmRefresh) cmRefresh();
+}
+themeSel.addEventListener('change', applyTheme);
+applyTheme();
+window.cmRefresh = () => cm.refresh();
 
 // ---------------- splitters ----------------
 function dragGutter(el, axis) {

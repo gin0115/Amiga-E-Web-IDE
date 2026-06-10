@@ -15,15 +15,18 @@
   'use strict';
 
   var BSIZE   = 512;
-  var NBLOCKS = 1760;          // double-density floppy
-  var ROOT    = 880;
-  var BITMAP  = 881;
-  var HT_SIZE = 72;            // hash table size for a floppy
+  var HT_SIZE = 72;            // standard hash table size
   var MAX_DBLK = (BSIZE / 4) - 56; // 72 data-block pointers per header
 
-  function buildADF(files, volumeName) {
+  // numBlocks: 1760 = DD floppy; larger = plain (non-RDB) hardfile, which
+  // AmigaDOS treats as one big volume with the same FFS layout
+  function buildVolume(files, volumeName, numBlocks) {
     files = files || [];
     volumeName = (volumeName || 'IDE').replace(/[^\x20-\x7e]/g, '').slice(0, 30) || 'IDE';
+    var NBLOCKS = numBlocks || 1760;
+    var ROOT = (2 + NBLOCKS - 1) >> 1;     // driver's midpoint calc (880 on a floppy)
+    var BITMAP = ROOT + 1;
+    if (NBLOCKS - 2 > 4064) throw new Error('volume too large for single bitmap block');
 
     var disk = new Uint8Array(NBLOCKS * BSIZE);      // zero-filled
     var dv = new DataView(disk.buffer);
@@ -149,5 +152,11 @@
     return disk;
   }
 
-  global.buildADF = buildADF;
+  global.buildADF = function (files, volumeName) {
+    return buildVolume(files, volumeName, 1760);
+  };
+  // 1 MB plain hardfile (2048 blocks) — mounts via IDE as its own HD volume
+  global.buildHDF = function (files, volumeName) {
+    return buildVolume(files, volumeName, 2048);
+  };
 })(window);

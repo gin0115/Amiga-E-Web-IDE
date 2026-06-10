@@ -39,7 +39,7 @@
   function tx(db, mode) { return db.transaction(STORE, mode).objectStore(STORE); }
 
   window.DiskBox = {
-    put: async function (category, name, bytes) {
+    put: async function (category, name, bytes, desc) {
       var db = await open();
       var data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
       return new Promise(function (resolve, reject) {
@@ -47,6 +47,7 @@
           key: category + '/' + name,
           category: category,
           name: name,
+          desc: desc || '',
           size: data.byteLength,
           when: Date.now(),
           data: data,
@@ -54,6 +55,15 @@
         req.onsuccess = function () { resolve(true); };
         req.onerror = function () { reject(req.error); };
       });
+    },
+
+    // rename and/or set the description, preserving the stored bytes
+    update: async function (category, name, newName, desc) {
+      var bytes = await this.get(category, name);
+      if (!bytes) return false;
+      if (newName && newName !== name) await this.remove(category, name);
+      await this.put(category, newName || name, bytes, desc);
+      return true;
     },
 
     get: async function (category, name) {
@@ -76,7 +86,7 @@
           var cur = req.result;
           if (!cur) { resolve(out); return; }
           var v = cur.value;
-          out.push({ category: v.category, name: v.name, size: v.size, when: v.when });
+          out.push({ category: v.category, name: v.name, desc: v.desc || '', size: v.size, when: v.when });
           cur.continue();
         };
         req.onerror = function () { reject(req.error); };

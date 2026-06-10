@@ -103,17 +103,21 @@
         }
       }
 
-      // hard disk via Gayle IDE (RDB-formatted HDF auto-mounts in WB)
-      if (images.hdf && cfg.mount && cfg.mount.config && cfg.mount.config[0]) {
-        if (typeof sae.setMountInfoDefaults === 'function') sae.setMountInfoDefaults(0);
+      // hard disks via Gayle IDE (plain hardfiles mount as their own volumes)
+      var hdfs = [];
+      if (images.hdf) hdfs.push({ data: images.hdf, name: images.hdfName || 'work.hdf' });
+      if (images.hdf2) hdfs.push({ data: images.hdf2, name: images.hdf2Name || 'compiled.hdf' });
+      for (var u = 0; u < hdfs.length; u++) {
+        if (!(cfg.mount && cfg.mount.config && cfg.mount.config[u])) break;
+        if (typeof sae.setMountInfoDefaults === 'function') sae.setMountInfoDefaults(u);
         if (cfg.chipset && !cfg.chipset.ide) cfg.chipset.ide = 1;
-        var ci = cfg.mount.config[0].ci;
+        var ci = cfg.mount.config[u].ci;
         ci.controller_type = 1;     // mainboard IDE
-        ci.controller_unit = 0;
+        ci.controller_unit = u;
         ci.blocksize = 512;
-        ci.file.name = images.hdfName || 'work.hdf';
-        ci.file.data = images.hdf;
-        ci.file.size = images.hdf.byteLength;
+        ci.file.name = hdfs[u].name;
+        ci.file.data = hdfs[u].data;
+        ci.file.size = hdfs[u].data.byteLength;
       }
 
       cfg.video.id = hostId || 'emuHost';
@@ -127,6 +131,8 @@
       cfg.video.size_win.height = h;
       if (cfg.video.size_fs) { cfg.video.size_fs.width = w; cfg.video.size_fs.height = h; }
       if (settings.ntsc != null && cfg.chipset) cfg.chipset.ntsc = !!settings.ntsc;
+      if (settings.turboFloppy !== false && cfg.floppy) cfg.floppy.speed = 0;  // 0 = turbo
+      if (cfg.audio) cfg.audio.enabled = settings.audio !== false;
 
       if (cfg.hook && cfg.hook.log) {
         cfg.hook.log.error = function (err, msg) { console.error('[SAE]', err, msg); };
