@@ -300,6 +300,24 @@ function renderFS() {
     li.innerHTML = `<span class="tag${bin ? ' bin' : ''}">${bin ? 'BIN' : (name.split('.').pop() || '?').toUpperCase()}</span>`
       + `<span class="name"></span><span class="meta">${fmtSize(bin ? v.byteLength : new Blob([v]).size)}</span>`;
     li.querySelector('.name').textContent = name;
+    if (!bin) {
+      const cp = document.createElement('button');
+      cp.className = 'iconbtn'; cp.title = 'copy to clipboard'; cp.textContent = '⧉';
+      cp.onclick = async e => {
+        e.stopPropagation();
+        await navigator.clipboard.writeText(name === current ? editor.value : FS[name]);
+        log('copied ' + name + ' to clipboard', 'dim');
+      };
+      li.appendChild(cp);
+    }
+    const dl = document.createElement('button');
+    dl.className = 'iconbtn'; dl.title = 'download'; dl.textContent = '⤓';
+    dl.onclick = e => {
+      e.stopPropagation();
+      const v = name === current && !bin ? editor.value : FS[name];
+      download(name, bin ? v : new TextEncoder().encode(v));
+    };
+    li.appendChild(dl);
     const del = document.createElement('button');
     del.className = 'iconbtn'; del.textContent = '✕';
     del.onclick = e => {
@@ -582,11 +600,30 @@ function renderDrives() {
 }
 renderDrives();
 
+async function getHdf() {
+  if (pending.hdf) return;
+  const items = (await DiskBox.list()).filter(i => i.category === 'hdf');
+  if (items.length) {
+    pending.hdf = await DiskBox.get('hdf', items[0].name);
+    pending.hdfName = items[0].name;
+    return;
+  }
+  try {        // bundled fallback: the WB boot disk expects DH0 (work.hdf)
+    const res = await fetch('./disks/work.hdf');
+    if (res.ok) {
+      pending.hdf = new Uint8Array(await res.arrayBuffer());
+      pending.hdfName = 'work.hdf';
+      log('work.hdf mounted as DH0: (your boot disk expects it)', 'dim');
+    }
+  } catch { /* none */ }
+}
+
 async function bootWb() {
   const rom = await getRom();
   if (!rom) { log('Set a Kickstart ROM first (Build & Run panel).', 'err'); return false; }
   const wb = await getWbDisk();
   if (!wb) { log('No Workbench ADF — add one with "Add disk".', 'err'); return false; }
+  await getHdf();
   const ok = await bootEmulator(
     { rom, df0: wb, df0Name: drives[0] ? drives[0].name : 'workbench.adf',
       df1: drives[1] && drives[1].bytes, df2: drives[2] && drives[2].bytes,
@@ -633,8 +670,7 @@ $('btnRunWb').onclick = async () => {
     return;
   }
   // deliver into the running system: COMPILED disk on DF3 (auto, no prompts)
-  const files = { 'prog': bin };
-  const adf = window.buildADF(files, 'COMPILED');
+  const adf = window.buildADF([{ name: 'prog', bytes: bin }], 'COMPILED');
   mountADF(3, adf, 'COMPILED.adf');
   await DiskBox.put('bin', 'main.bin', bin);
   renderBox();
