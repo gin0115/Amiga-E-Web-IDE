@@ -201,7 +201,7 @@
 
     /* SAE takes over #emuHost and gives it a fixed inline pixel size — so
        the PARENT does the centering, and carries the WB grey while running */
-    #emuPane > .body { display: flex; align-items: center; justify-content: center; background: var(--bg); }
+    #emuPane > .body { display: flex; align-items: safe center; justify-content: safe center; overflow: auto; background: var(--bg); }
     #emuPane > .body.running { background: #aaaaaa; }
     #emuHost canvas { max-height: 100%; display: block !important; margin: 0 auto !important; }
     .empty { color: var(--dim); padding: 12px; }
@@ -1036,8 +1036,9 @@ function applyScreenSize() {
     canvas.style.setProperty('height', '100%', 'important');
     canvas.style.setProperty('width', 'auto', 'important');
   } else {
-    canvas.style.setProperty('width', (canvas.width * parseFloat(v)) + 'px', 'important');
-    canvas.style.setProperty('height', 'auto', 'important');
+    const f = parseFloat(v);
+    canvas.style.setProperty('width', (canvas.width * f) + 'px', 'important');
+    canvas.style.setProperty('height', (canvas.height * f) + 'px', 'important');
   }
 }
 $('setScale').value = localStorage.getItem('ide-scale') || '1';
