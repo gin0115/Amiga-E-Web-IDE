@@ -25,6 +25,19 @@
 
   var sae = null;
   var scriptsLoaded = false;
+  var stopWaiters = [];
+
+  // sae.stop() is asynchronous — the machine spins down and fires the
+  // 'stopped' hook later. Starting before that yields SAEE_AlreadyRunning(1).
+  function stopAndWait() {
+    return new Promise(function (resolve) {
+      var done = false;
+      var finish = function () { if (!done) { done = true; resolve(); } };
+      stopWaiters.push(finish);
+      try { sae.stop(); } catch (e) { finish(); }
+      setTimeout(finish, 3000);          // safety net
+    });
+  }
 
   function status(msg, isError) {
     (isError ? console.error : console.log)('[amiga-ide]', msg);
@@ -72,11 +85,17 @@
         throw new Error('SAE did not register ScriptedAmigaEmulator');
       }
 
-      if (sae) { try { sae.stop(); } catch (e) { /* already stopped */ } sae = null; }
-      var host = document.getElementById(hostId || 'emuHost');
-      if (host) host.innerHTML = '';
-
-      sae = new ScriptedAmigaEmulator();
+      // SAE keeps machine state in globals — a second instance corrupts the
+      // event scheduler (runaway current_hpos, 100% CPU). Create ONCE, then
+      // stop/reconfigure/restart the same instance for every reboot.
+      if (sae) {
+        status('Stopping previous machine…');
+        await stopAndWait();
+      } else {
+        var host = document.getElementById(hostId || 'emuHost');
+        if (host) host.innerHTML = '';
+        sae = new ScriptedAmigaEmulator();
+      }
       var cfg = sae.getConfig();
       var model = MODELS[settings.model] !== undefined ? MODELS[settings.model] : MODELS.A1200;
       sae.setModel(model, null);
@@ -103,19 +122,28 @@
         }
       }
 
-      // hard disk via Gayle IDE (RDB-formatted HDF auto-mounts in WB)
-      if (images.hdf && cfg.mount && cfg.mount.config && cfg.mount.config[0]) {
-        if (typeof sae.setMountInfoDefaults === 'function') sae.setMountInfoDefaults(0);
+      // hard disks via Gayle IDE (plain hardfiles mount as their own volumes)
+      var hdfs = [];
+      if (images.hdf) hdfs.push({ data: images.hdf, name: images.hdfName || 'work.hdf' });
+      if (images.hdf2) hdfs.push({ data: images.hdf2, name: images.hdf2Name || 'compiled.hdf' });
+      for (var u = 0; u < hdfs.length; u++) {
+        if (!(cfg.mount && cfg.mount.config && cfg.mount.config[u])) break;
+        if (typeof sae.setMountInfoDefaults === 'function') sae.setMountInfoDefaults(u);
         if (cfg.chipset && !cfg.chipset.ide) cfg.chipset.ide = 1;
-        var ci = cfg.mount.config[0].ci;
+        var ci = cfg.mount.config[u].ci;
         ci.controller_type = 1;     // mainboard IDE
-        ci.controller_unit = 0;
+        ci.controller_unit = u;
         ci.blocksize = 512;
-        ci.file.name = images.hdfName || 'work.hdf';
-        ci.file.data = images.hdf;
-        ci.file.size = images.hdf.byteLength;
+        ci.file.name = hdfs[u].name;
+        ci.file.data = hdfs[u].data;
+        ci.file.size = hdfs[u].data.byteLength;
       }
 
+      // cursor mode Hide (not Lock): pointer-lock makes the BROWSER steal
+      // ESC to exit the lock — but ESC is a real Amiga key. With Hide, the
+      // mouse tracks absolutely over the canvas, every key reaches the
+      // Amiga, and "leaving" is just moving the pointer out of the pane.
+      cfg.video.cursor = 1;              // SAEC_Config_Video_Cursor_Hide
       cfg.video.id = hostId || 'emuHost';
       cfg.video.enabled = true;
       cfg.video.api = SAE_VIDEO_API_CANVAS;
@@ -127,17 +155,27 @@
       cfg.video.size_win.height = h;
       if (cfg.video.size_fs) { cfg.video.size_fs.width = w; cfg.video.size_fs.height = h; }
       if (settings.ntsc != null && cfg.chipset) cfg.chipset.ntsc = !!settings.ntsc;
+      if (settings.turboFloppy !== false && cfg.floppy) cfg.floppy.speed = 0;  // 0 = turbo
+      if (cfg.audio) cfg.audio.enabled = settings.audio !== false;
 
       if (cfg.hook && cfg.hook.log) {
         cfg.hook.log.error = function (err, msg) { console.error('[SAE]', err, msg); };
       }
       if (cfg.hook && cfg.hook.event) {
         cfg.hook.event.started = function () { status('Running.'); };
-        cfg.hook.event.stopped = function () { status('Stopped.'); };
+        cfg.hook.event.stopped = function () {
+          status('Stopped.');
+          var w = stopWaiters; stopWaiters = [];
+          w.forEach(function (f) { f(); });
+        };
       }
 
       status('Starting emulator…');
       var err = sae.start();
+      if (err === 1) {                   // SAEE_AlreadyRunning: one more spin-down
+        await stopAndWait();
+        err = sae.start();
+      }
       if (err !== SAE_ERR_NONE && err !== undefined) {
         throw new Error('SAE start failed with code ' + err);
       }

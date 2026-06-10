@@ -15,15 +15,18 @@
   'use strict';
 
   var BSIZE   = 512;
-  var NBLOCKS = 1760;          // double-density floppy
-  var ROOT    = 880;
-  var BITMAP  = 881;
-  var HT_SIZE = 72;            // hash table size for a floppy
+  var HT_SIZE = 72;            // standard hash table size
   var MAX_DBLK = (BSIZE / 4) - 56; // 72 data-block pointers per header
 
-  function buildADF(files, volumeName) {
+  // numBlocks: 1760 = DD floppy; larger = plain (non-RDB) hardfile, which
+  // AmigaDOS treats as one big volume with the same FFS layout
+  function buildVolume(files, volumeName, numBlocks) {
     files = files || [];
     volumeName = (volumeName || 'IDE').replace(/[^\x20-\x7e]/g, '').slice(0, 30) || 'IDE';
+    var NBLOCKS = numBlocks || 1760;
+    var ROOT = (2 + NBLOCKS - 1) >> 1;     // driver's midpoint calc (880 on a floppy)
+    var BITMAP = ROOT + 1;
+    if (NBLOCKS - 2 > 4064) throw new Error('volume too large for single bitmap block');
 
     var disk = new Uint8Array(NBLOCKS * BSIZE);      // zero-filled
     var dv = new DataView(disk.buffer);
@@ -149,5 +152,87 @@
     return disk;
   }
 
-  global.buildADF = buildADF;
+  global.buildADF = function (files, volumeName) {
+    return buildVolume(files, volumeName, 1760);
+  };
+
+  // RDB-formatted 1MB hardfile: the A1200 boot scan reads the Rigid Disk
+  // Block to find partitions — plain FFS-at-0 images are invisible to it.
+  // Geometry: 64 cyls x 1 head x 32 sectors; cyl 0 = RDB, cyls 1-63 = FFS.
+  global.buildHDF = function (files, volumeName) {
+    var SECTORS = 32, CYLS = 64, RESERVED_CYLS = 1;
+    var total = CYLS * SECTORS;                    // 2048 blocks = 1 MB
+    var partBlocks = (CYLS - RESERVED_CYLS) * SECTORS;
+    var vol = buildVolume(files, volumeName, partBlocks);
+
+    var img = new Uint8Array(total * BSIZE);
+    img.set(vol, RESERVED_CYLS * SECTORS * BSIZE);
+    var dv = new DataView(img.buffer);
+    var set32 = function (off, val) { dv.setUint32(off, val >>> 0, false); };
+    var text = function (off, s) {
+      for (var i = 0; i < s.length; i++) dv.setUint8(off + i, s.charCodeAt(i));
+    };
+    var bstr = function (off, s) {
+      dv.setUint8(off, s.length);
+      text(off + 1, s);
+    };
+    var rdbsum = function (base, longs) {
+      set32(base + 8, 0);
+      var sum = 0;
+      for (var i = 0; i < longs; i++) sum = (sum + dv.getUint32(base + i * 4, false)) >>> 0;
+      set32(base + 8, ((~sum) + 1) >>> 0);
+    };
+
+    // ---- RDSK (block 0) ----
+    text(0, 'RDSK');
+    set32(4, 64);              // size in longs
+    set32(12, 7);              // hostID
+    set32(16, BSIZE);
+    set32(20, 0x17);           // flags: last drive/LUN/ID
+    set32(24, 0xffffffff);     // no bad blocks
+    set32(28, 1);              // partition list -> block 1
+    set32(32, 0xffffffff);     // no fs headers
+    set32(36, 0xffffffff);     // no drive init
+    for (var r = 40; r < 64; r += 4) set32(r, 0xffffffff);
+    set32(64, CYLS);
+    set32(68, SECTORS);
+    set32(72, 1);              // heads
+    set32(76, 1);              // interleave
+    set32(80, CYLS);           // park
+    set32(128, 0);             // rdbBlocksLo
+    set32(132, SECTORS - 1);   // rdbBlocksHi
+    set32(136, RESERVED_CYLS); // loCylinder
+    set32(140, CYLS - 1);      // hiCylinder
+    set32(144, SECTORS);       // blocks per cylinder
+    set32(152, 1);             // highRDSKBlock
+    text(160, 'ECOMP   ');
+    text(168, 'COMPILED DISK   ');
+    text(184, '1.0 ');
+    rdbsum(0, 64);
+
+    // ---- PART (block 1) ----
+    var P = BSIZE;
+    text(P, 'PART');
+    set32(P + 4, 64);
+    set32(P + 12, 7);          // hostID
+    set32(P + 16, 0xffffffff); // no next partition
+    set32(P + 20, 0);          // flags: not bootable, do automount
+    bstr(P + 36, 'ECOMP0');    // device name (volume name comes from FFS root)
+    set32(P + 128, 16);        // DosEnvVec: table size
+    set32(P + 132, BSIZE / 4); // longs per block
+    set32(P + 140, 1);         // surfaces
+    set32(P + 144, 1);         // sectors per block
+    set32(P + 148, SECTORS);   // blocks per track
+    set32(P + 152, 2);         // reserved blocks
+    set32(P + 164, RESERVED_CYLS);  // lowCyl
+    set32(P + 168, CYLS - 1);  // highCyl
+    set32(P + 172, 30);        // buffers
+    set32(P + 180, 0x00ffffff);// maxTransfer
+    set32(P + 184, 0x7ffffffe);// mask
+    set32(P + 188, 0);         // boot priority
+    set32(P + 192, 0x444f5301);// dosType DOS\1 (FFS)
+    rdbsum(P, 64);
+
+    return img;
+  };
 })(window);
