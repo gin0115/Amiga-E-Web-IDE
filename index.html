@@ -203,7 +203,7 @@
        the PARENT does the centering, and carries the WB grey while running */
     #emuPane > .body { display: flex; align-items: safe center; justify-content: safe center; overflow: auto; background: var(--bg); }
     #emuPane > .body.running { background: #aaaaaa; }
-    #emuHost canvas { max-height: 100%; display: block !important; margin: 0 auto !important; }
+
     .empty { color: var(--dim); padding: 12px; }
     .drivebar { display: inline-flex; gap: 4px; }
     .drivechip { font-size: 12px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 3px; background: var(--control); color: var(--muted); cursor: pointer; }
@@ -1030,17 +1030,22 @@ $('boxInput').onchange = async e => {
 function applyScreenSize() {
   const v = $('setScale').value;
   localStorage.setItem('ide-scale', v);
-  const canvas = document.querySelector('#emuHost canvas');
-  if (!canvas) return;
+  // scale the WHOLE SAE host via transform — never touch its internals
+  // (SAE keeps several canvases in there and sizes them itself)
+  const host = $('emuHost');
+  const body = host.parentElement;
+  let f;
   if (v === 'fit') {
-    canvas.style.setProperty('height', '100%', 'important');
-    canvas.style.setProperty('width', 'auto', 'important');
+    f = Math.min(body.clientHeight / Math.max(1, host.offsetHeight),
+                 body.clientWidth / Math.max(1, host.offsetWidth));
   } else {
-    const f = parseFloat(v);
-    canvas.style.setProperty('width', (canvas.width * f) + 'px', 'important');
-    canvas.style.setProperty('height', (canvas.height * f) + 'px', 'important');
+    f = parseFloat(v);
   }
+  host.style.transform = (f && Math.abs(f - 1) > 0.01) ? `scale(${f})` : '';
+  host.style.transformOrigin = 'center center';
 }
+new ResizeObserver(() => { if ($('setScale').value === 'fit') applyScreenSize(); })
+  .observe(document.getElementById('emuPane'));
 $('setScale').value = localStorage.getItem('ide-scale') || '1';
 $('setScale').addEventListener('change', applyScreenSize);
 
