@@ -30,6 +30,7 @@
       --syn-string2: #a05a20; --syn-number: #7a30c0; --syn-comment: #8a9a8a;
       --syn-operator: #2060c0; --syn-atom: #c02060; --syn-var: #2a2a3a;
       --gutter-text: #a0a0b8; --cursor: #157a35; --selection: #c8d8f8;
+      --tag-bin: #9a5a00; --tag-rom: #1a5a9a; --tag-disk: #6a2aa0; --tag-hdf: #157a45; --tag-project: #b02a6a;
     }
     [data-theme="workbench"] {
       color-scheme: light;
@@ -43,6 +44,7 @@
       --syn-string2: #774400; --syn-number: #550088; --syn-comment: #666666;
       --syn-operator: #003377; --syn-atom: #aa0055; --syn-var: #111111;
       --gutter-text: #444444; --cursor: #ff8800; --selection: #88aadd;
+      --tag-bin: #884400; --tag-rom: #003377; --tag-disk: #550088; --tag-hdf: #005522; --tag-project: #880044;
     }
     [data-theme="solarized"] {
       color-scheme: dark;
@@ -56,6 +58,7 @@
       --syn-string2: #cb4b16; --syn-number: #d33682; --syn-comment: #586e75;
       --syn-operator: #268bd2; --syn-atom: #d33682; --syn-var: #93a1a1;
       --gutter-text: #586e75; --cursor: #859900; --selection: #155a6a;
+      --tag-bin: #b58900; --tag-rom: #268bd2; --tag-disk: #6c71c4; --tag-hdf: #2aa198; --tag-project: #d33682;
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -70,11 +73,11 @@
     }
     header h1 { font-size: 14px; margin: 0; color: var(--text-bright); font-weight: 600; }
     header .spacer { flex: 1; }
-    button, label.btn, select {
+    button, label.btn, a.btn, select {
       font: inherit; cursor: pointer; padding: 5px 10px; border-radius: 4px;
       border: 1px solid var(--border); background: var(--control); color: var(--text);
     }
-    button:hover, label.btn:hover { background: var(--control-hover); }
+    button:hover, label.btn:hover, a.btn:hover { background: var(--control-hover); }
     button:disabled { opacity: .5; cursor: default; }
     button.primary { background: var(--primary); border-color: var(--primary-border); color: var(--text-bright); }
     button.primary:hover { background: var(--primary); }
@@ -109,9 +112,10 @@
     #rightPane  { grid-row: 1; grid-column: 3; overflow: auto; }
     #emuPane    { grid-row: 3; grid-column: 1 / 4; }
 
+    #editorPane > .body { overflow: hidden; }
     #editorHost { height: 100%; }
     .CodeMirror {
-      height: 100%; background: var(--editor-bg); color: var(--syn-var);
+      background: var(--editor-bg); color: var(--syn-var);
       font-family: inherit; font-size: 13px; line-height: 1.5;
     }
     .CodeMirror-gutters { background: var(--bg); border-right: 1px solid var(--hairline); }
@@ -179,12 +183,12 @@
     #fsList li.active { background: var(--control-hover); }
     .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .meta { color: var(--dim); font-size: 11px; }
-    .tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); color: var(--muted); }
-    .tag.bin { color: #ffc98a; border-color: #6a5a3a; }
+    .tag { font-size: 11px; padding: 1px 6px; font-weight: 600; border-radius: 3px; border: 1px solid var(--border); color: var(--muted); }
+    .tag.bin { color: var(--tag-bin); border-color: var(--tag-bin); }
     .tag.rom { color: var(--syn-operator); border-color: #3a5a7a; }
     .tag.disk { color: var(--syn-number); border-color: #5a3a7a; }
-    .tag.hdf { color: #a0ffc8; border-color: #3a7a5a; }
-    .tag.project { color: #ffa0c8; border-color: #7a3a5a; }
+    .tag.hdf { color: var(--tag-hdf); border-color: var(--tag-hdf); }
+    .tag.project { color: var(--tag-project); border-color: var(--tag-project); }
     .iconbtn { border: 0; background: none; color: var(--dim); padding: 0 3px; cursor: pointer; }
     .iconbtn:hover { color: var(--text-bright); }
 
@@ -193,9 +197,9 @@
     #emuHost canvas { max-height: 100%; margin: 0 auto; display: block; }
     .empty { color: var(--dim); padding: 12px; }
     .drivebar { display: inline-flex; gap: 4px; }
-    .drivechip { font-size: 10px; padding: 1px 6px; border: 1px solid var(--border); border-radius: 3px; background: var(--control); color: var(--muted); cursor: pointer; }
+    .drivechip { font-size: 12px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 3px; background: var(--control); color: var(--muted); cursor: pointer; }
     .drivechip:hover { background: var(--control-hover); color: var(--text-bright); }
-    .drivechip.df3 { border-color: #6a5a3a; color: #ffc98a; }
+    .drivechip.df3 { border-color: var(--tag-bin); color: var(--tag-bin); }
     select { padding: 3px 6px; }
     input[type=number] { width: 56px; font: inherit; background: var(--control); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; }
   </style>
@@ -249,7 +253,7 @@
           </div>
           <div class="row">
             <label class="btn">Set Kickstart ROM…<input id="romInput" type="file" hidden /></label>
-            <a href="https://www.amigaforever.com/plus/" target="_blank" rel="noopener" title="buy Kickstart ROMs and Workbench legally — Amiga Forever (Cloanto)" style="color:var(--syn-operator);font-size:10px;text-decoration:none;opacity:.8">ROMs? → Amiga Forever</a>
+            <a href="https://www.amigaforever.com/plus/" target="_blank" rel="noopener" class="btn" style="text-decoration:none" title="Kickstart ROMs + Workbench, legally — Amiga Forever (Cloanto)">Buy ROMs…</a>
             <label class="btn">Add disk (ADF)…<input id="diskInput" type="file" accept=".adf" hidden /></label>
             <label class="btn">Add hard disk (HDF)…<input id="hdfInput" type="file" accept=".hdf" hidden /></label>
           </div>
@@ -364,6 +368,9 @@ const cm = CodeMirror($('editorHost'), {
   value: '', mode: 'amigae', lineNumbers: true, indentUnit: 2, tabSize: 2,
   styleActiveLine: false, matchBrackets: false,
 });
+// pixel-size CM to its host, whatever the splitters do
+new ResizeObserver(() => cm.setSize($('editorHost').clientWidth, $('editorHost').clientHeight))
+  .observe($('editorHost'));
 // drop-in shim: the rest of the IDE keeps talking to `editor` as before
 const editor = {
   get value() { return cm.getValue(); },
@@ -1034,6 +1041,7 @@ function dragGutter(el, axis) {
       el.classList.remove('active');
       window.removeEventListener('mousemove', move);
       window.removeEventListener('mouseup', up);
+      cm.refresh();
     };
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', up);
