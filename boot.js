@@ -72,11 +72,16 @@
         throw new Error('SAE did not register ScriptedAmigaEmulator');
       }
 
-      if (sae) { try { sae.stop(); } catch (e) { /* already stopped */ } sae = null; }
-      var host = document.getElementById(hostId || 'emuHost');
-      if (host) host.innerHTML = '';
-
-      sae = new ScriptedAmigaEmulator();
+      // SAE keeps machine state in globals — a second instance corrupts the
+      // event scheduler (runaway current_hpos, 100% CPU). Create ONCE, then
+      // stop/reconfigure/restart the same instance for every reboot.
+      if (sae) {
+        try { sae.stop(); } catch (e) { /* already stopped */ }
+      } else {
+        var host = document.getElementById(hostId || 'emuHost');
+        if (host) host.innerHTML = '';
+        sae = new ScriptedAmigaEmulator();
+      }
       var cfg = sae.getConfig();
       var model = MODELS[settings.model] !== undefined ? MODELS[settings.model] : MODELS.A1200;
       sae.setModel(model, null);
