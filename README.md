@@ -10,6 +10,17 @@ all client-side, no server.
 > **[Wouter van Oortmerssen](https://strlen.com/)**, used with his kind
 > permission. Thank you, Wouter!
 
+## Screenshots
+
+![Compile & Run (DOS): code compiled in-browser, running in the AmigaDOS shell](docs/img/ide-dark-dos-run.png)
+*Compile & Run (DOS) — compiled in milliseconds, booted straight into the program.*
+
+![The COMPILED drive delivered into a running Workbench](docs/img/ide-wb-compiled.png)
+*Compile & Run (WB) — the COMPILED drive appears on the live desktop, program icon included.*
+
+![The Amiga Workbench theme](docs/img/ide-workbench-theme.png)
+*One of four themes — Dark, Light, Amiga Workbench, Solarized (all WCAG AA checked).*
+
 ## Layout
 
 - **Top left** — the editor (project files persist in your browser)
