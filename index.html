@@ -334,6 +334,16 @@
             <span class="meta">applies immediately</span>
           </div>
           <div class="row">
+            <label>Release key</label>
+            <select id="setRelKey">
+              <option value="End" selected>End</option>
+              <option value="Home">Home</option>
+              <option value="PageUp">PageUp</option>
+              <option value="PageDown">PageDown</option>
+            </select>
+            <label><input id="setMouseOut" type="checkbox" /> also release on mouse-out</label>
+          </div>
+          <div class="row">
             <label><input id="setTurbo" type="checkbox" checked /> turbo floppy (fast boots)</label>
             <label><input id="setAudio" type="checkbox" checked /> audio</label>
             <span class="meta">applies on next boot</span>
@@ -344,7 +354,10 @@
 
     <!-- BOTTOM: full-width emulator -->
     <section id="emuPane" class="pane">
-      <div class="titlebar">Emulator <span id="emuStatus" class="meta"></span><div class="spacer"></div></div>
+      <div class="titlebar">Emulator <span id="emuStatus" class="meta"></span>
+        <div class="spacer"></div>
+        <span id="captureState" class="pill">click the screen to capture input</span>
+      </div>
       <div class="body"><div id="emuHost"><span class="empty">Boot Workbench, or Compile &amp; Run (DOS) to boot straight into your program.</span></div></div>
     </section>
 
@@ -1048,6 +1061,53 @@ new ResizeObserver(() => { if ($('setScale').value === 'fit') applyScreenSize();
   .observe(document.getElementById('emuPane'));
 $('setScale').value = localStorage.getItem('ide-scale') || '1';
 $('setScale').addEventListener('change', applyScreenSize);
+
+// ---------------- input capture: deliberate in, safe key out ----------------
+// SAE listens for keys on the whole document (capture phase). This gate is
+// registered FIRST, so: not captured -> SAE never sees the keyboard (the
+// editor is safe); captured -> everything incl. Esc goes to the Amiga, and
+// only the configured release key (default End — not an Amiga key) exits.
+let emuCaptured = false;
+const relKey = () => localStorage.getItem('ide-relkey') || 'End';
+$('setRelKey').value = relKey();
+$('setRelKey').addEventListener('change', () => {
+  localStorage.setItem('ide-relkey', $('setRelKey').value);
+  setCapture(emuCaptured);   // refresh label
+});
+$('setMouseOut').checked = localStorage.getItem('ide-mouseout') === '1';
+$('setMouseOut').addEventListener('change', () => {
+  localStorage.setItem('ide-mouseout', $('setMouseOut').checked ? '1' : '0');
+});
+function setCapture(on) {
+  emuCaptured = on;
+  const el = $('captureState');
+  el.textContent = on ? `⌨ captured — press ${relKey()} to release`
+                      : 'click the screen to capture input';
+  el.className = 'pill' + (on ? ' ok' : '');
+  if (on && document.activeElement) document.activeElement.blur();
+}
+for (const type of ['keydown', 'keyup', 'keypress']) {
+  document.addEventListener(type, e => {
+    if (!window.sae) return;                       // nothing running: normal page
+    if (emuCaptured) {
+      if (e.key === relKey()) {                    // the safe leave key
+        if (type === 'keydown') setCapture(false);
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+      // else: fall through to SAE -> the Amiga gets it (Esc included)
+    } else {
+      e.stopImmediatePropagation();                // typing stays in the IDE
+    }
+  }, true);
+}
+$('emuHost').addEventListener('mousedown', () => {
+  if (window.sae && !emuCaptured) setCapture(true);
+});
+$('emuHost').addEventListener('mouseleave', () => {
+  if (emuCaptured && $('setMouseOut').checked) setCapture(false);
+});
+setCapture(false);
 
 // ---------------- theme ----------------
 const themeSel = $('theme');
