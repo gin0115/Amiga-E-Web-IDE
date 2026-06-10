@@ -199,11 +199,11 @@
     .iconbtn { border: 0; background: none; color: var(--dim); padding: 0 3px; cursor: pointer; }
     .iconbtn:hover { color: var(--text-bright); }
 
-    #emuHost { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg); text-align: center; }
-    #emuHost.running { background: #aaaaaa; }   /* blend into the WB grey while on */
-    #emuHost > * { margin: 0 auto !important; }
-    #emuHost div { width: auto !important; }
-    #emuHost canvas { max-height: 100%; margin: 0 auto !important; display: block !important; }
+    /* SAE takes over #emuHost and gives it a fixed inline pixel size — so
+       the PARENT does the centering, and carries the WB grey while running */
+    #emuPane > .body { display: flex; align-items: center; justify-content: center; background: var(--bg); }
+    #emuPane > .body.running { background: #aaaaaa; }
+    #emuHost canvas { max-height: 100%; display: block !important; margin: 0 auto !important; }
     .empty { color: var(--dim); padding: 12px; }
     .drivebar { display: inline-flex; gap: 4px; }
     .drivechip { font-size: 12px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 3px; background: var(--control); color: var(--muted); cursor: pointer; }
@@ -611,8 +611,8 @@ for (const sect of document.querySelectorAll('.section > .sect-title')) {
 
 window.onEmuStatus = (msg, isError) => {
   $('emuStatus').textContent = msg;
-  if (/Running/.test(msg)) $('emuHost').classList.add('running');
-  if (/Stopped/.test(msg)) $('emuHost').classList.remove('running');
+  if (/Running/.test(msg)) $('emuHost').parentElement.classList.add('running');
+  if (/Stopped/.test(msg)) $('emuHost').parentElement.classList.remove('running');
   $('emuState').textContent = msg.length > 28 ? msg.slice(0, 28) + '…' : msg;
   if (isError) log('[emu] ' + msg, 'err');
 };
