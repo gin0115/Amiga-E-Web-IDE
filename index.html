@@ -326,10 +326,10 @@
           <div class="row">
             <label>Screen size</label>
             <select id="setScale">
-              <option value="1">1×</option>
+              <option value="1" selected>1×</option>
               <option value="1.5">1.5×</option>
               <option value="2">2×</option>
-              <option value="fit" selected>fit pane</option>
+              <option value="fit">fit pane</option>
             </select>
             <span class="meta">applies immediately</span>
           </div>
@@ -1040,7 +1040,7 @@ function applyScreenSize() {
     canvas.style.setProperty('height', 'auto', 'important');
   }
 }
-$('setScale').value = localStorage.getItem('ide-scale') || 'fit';
+$('setScale').value = localStorage.getItem('ide-scale') || '1';
 $('setScale').addEventListener('change', applyScreenSize);
 
 // ---------------- theme ----------------
