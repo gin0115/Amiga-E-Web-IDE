@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>About — Amiga E Web IDE</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0a14; --panel: #10101e; --panel-head: #181830; --border: #3a3a5a;
+      --border-subtle: #2a2a44; --text: #c7c7d9; --text-bright: #e8e8f4;
+      --muted: #8a8ab0; --accent: #5a7bff; --ok: #8affa0; --code-bg: #0c0c18;
+      --kw: #ff9d5c; --fn: #7bd88f; --str: #e6d37a;
+    }
+    [data-theme="light"] {
+      color-scheme: light;
+      --bg: #f2f2f7; --panel: #ffffff; --panel-head: #e4e4ee; --border: #b8b8cc;
+      --border-subtle: #d0d0de; --text: #2a2a3a; --text-bright: #11111c;
+      --muted: #5a5a74; --accent: #3a5bdf; --ok: #156a28; --code-bg: #fbfbfe;
+      --kw: #b34d08; --fn: #11652b; --str: #6e5400;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+      font-size: 14px; line-height: 1.65;
+    }
+    header {
+      padding: 10px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 14px; position: sticky; top: 0;
+      background: var(--bg); z-index: 5;
+    }
+    header h1 { font-size: 15px; margin: 0; color: var(--text-bright); }
+    header .spacer { flex: 1; }
+    header a, .btnlink {
+      color: var(--text); text-decoration: none; border: 1px solid var(--border);
+      padding: 5px 12px; border-radius: 5px; background: var(--panel);
+    }
+    header a:hover, .btnlink:hover { border-color: var(--accent); color: var(--text-bright); }
+    main { max-width: 980px; margin: 0 auto; padding: 24px 18px 80px; }
+    h2 {
+      color: var(--text-bright); font-size: 17px; margin: 44px 0 10px;
+      padding: 8px 14px; background: var(--panel-head); border-radius: 7px;
+      border-left: 4px solid var(--accent);
+    }
+    h3 { color: var(--text-bright); font-size: 14px; margin: 26px 0 6px; }
+    p, li { color: var(--text); }
+    a { color: var(--accent); }
+    .lead { font-size: 15px; color: var(--text-bright); }
+    .card {
+      background: var(--panel); border: 1px solid var(--border-subtle);
+      border-radius: 8px; padding: 14px 18px; margin: 14px 0;
+    }
+    .credit { border-left: 4px solid var(--ok); }
+    code, pre {
+      background: var(--code-bg); border: 1px solid var(--border-subtle);
+      border-radius: 5px; font-family: inherit;
+    }
+    code { padding: 1px 6px; }
+    pre { padding: 12px 14px; overflow-x: auto; line-height: 1.5; }
+    pre code { border: 0; padding: 0; background: none; }
+    .kw { color: var(--kw); font-weight: 600; } .fn { color: var(--fn); } .str { color: var(--str); }
+    img.shot {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px;
+      margin: 10px 0 4px; display: block;
+    }
+    .caption { color: var(--muted); font-size: 12px; margin-bottom: 18px; }
+    table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+    th, td { border: 1px solid var(--border-subtle); padding: 7px 12px; text-align: left; }
+    th { background: var(--panel-head); color: var(--text-bright); }
+    .pill {
+      display: inline-block; font-size: 11px; border: 1px solid var(--border);
+      border-radius: 9px; padding: 1px 9px; color: var(--muted); margin-right: 6px;
+    }
+    ol li, ul li { margin: 5px 0; }
+    kbd {
+      border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px;
+      padding: 0 6px; background: var(--panel); font-family: inherit; font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Amiga E Web IDE — about &amp; guides</h1>
+    <div class="spacer"></div>
+    <a href="./index.html">← back to the IDE</a>
+    <a href="https://github.com/gin0115/Amiga-E-Web-IDE" target="_blank" rel="noopener">GitHub: IDE</a>
+    <a href="https://github.com/gin0115/Amiga-E-Compiler-WebBased" target="_blank" rel="noopener">GitHub: compiler</a>
+  </header>
+  <main>
+    <p class="lead">
+      Write <b>Amiga E</b> in your browser, compile it <i>in your browser</i> in
+      milliseconds, and run the result on an emulated Amiga 1200 — Workbench,
+      floppies, hard disks and all. Nothing is uploaded anywhere; the compiler,
+      the emulator and your files all live entirely in the page.
+    </p>
+
+    <div class="card credit">
+      The Amiga E language and its v40 module set are the work of
+      <a href="https://strlen.com/" target="_blank" rel="noopener"><b>Wouter van Oortmerssen</b></a>,
+      used with his kind permission — the original compiler is now
+      <a href="https://strlen.com/amiga-e/" target="_blank" rel="noopener">open source (GPL)</a>.
+      Thank you, Wouter! Every binary this IDE produces carries that credit embedded in it.
+      The compiler is <a href="https://github.com/gin0115/Amiga-E-Compiler-WebBased" target="_blank" rel="noopener">ecomp</a>:
+      a from-scratch JavaScript implementation of E v3.3a, validated against the
+      original 1997 compiler by a 115-program differential test suite.
+    </div>
+
+    <h2 id="start">Getting started</h2>
+    <ol>
+      <li><b>Set Kickstart ROM…</b> — pick your Kickstart 3.1 (A1200) ROM file.
+          It's stored in your browser's <a href="#diskbox">disk box</a>, never uploaded.
+          No ROM? Buy one legally from
+          <a href="https://www.amigaforever.com/plus/" target="_blank" rel="noopener">Amiga Forever</a> (Cloanto).</li>
+      <li><b>Add disk (ADF)…</b> — add a Workbench 3.1 boot floppy the same way.</li>
+      <li>Pick something from the <b>examples</b> dropdown (the multi-file one loads two tabs).</li>
+      <li>Hit <b>▶ Compile &amp; Run (DOS)</b> — compiles in a few ms, boots the
+          Amiga straight into your program, output in the AmigaDOS shell.</li>
+    </ol>
+    <img class="shot" src="docs/img/ide-dark-dos-run.png" alt="Dark theme: fib demo compiled and running in the AmigaDOS shell" />
+    <div class="caption">Compile &amp; Run (DOS): the editor's program compiled (27 ms) and auto-running in the emulated Amiga's shell.</div>
+
+    <h2 id="run">The four build actions</h2>
+    <table>
+      <tr><th>Button</th><th>What happens</th></tr>
+      <tr><td>▶ Compile &amp; Run (DOS)</td><td>Builds a bootable floppy in memory and reboots straight into your program. Fastest way to see console output.</td></tr>
+      <tr><td>▶ Compile &amp; Run (WB)</td><td>Asks how to deliver: <b>floppy DF3</b> (instant hot-mount into the running Workbench) or <b>HDD image</b> (a real RDB hard disk, attached on reboot). Either way a <code>COMPILED</code> drive appears on the desktop with your program inside — with an icon, double-click to run.</td></tr>
+      <tr><td>⤓ Compile → .bin</td><td>Downloads the AmigaOS executable — take it to real hardware or any emulator.</td></tr>
+      <tr><td>⤓ Compile → .adf</td><td>Downloads a bootable 880K floppy image that runs your program at boot.</td></tr>
+    </table>
+    <p>The <b>output name</b> field (Compiler panel) names the produced binary, like
+       the CLI's <code>-o</code>.</p>
+    <img class="shot" src="docs/img/ide-light-wb-hdd.png" alt="Light theme: COMPILED drive delivered to a running Workbench" />
+    <div class="caption">Compile &amp; Run (WB): the COMPILED drive delivered into a live Workbench desktop.</div>
+    <div class="card">
+      <b>Tip — programs and consoles:</b> a program double-clicked on the Workbench
+      desktop has no console window, so plain <code>WriteF</code> output isn't visible
+      there (just like the real machine). Use <b>Run (DOS)</b> for console programs, or
+      open Workbench's Shell and type <code>DF3:yourprog</code> / <code>COMPILED:yourprog</code>.
+      Programs that open their own windows and screens work perfectly from the desktop.
+    </div>
+
+    <h2 id="multifile">Multi-file projects</h2>
+    <p>Exactly like real E: you always compile <code>main.e</code>, and it pulls
+       modules in via <code>MODULE</code> statements. Add files with <b>+ new</b> in
+       the Project files panel:</p>
+<pre><code><span class="kw">MODULE</span> <span class="str">'*helper'</span>      <span style="color:var(--muted)">-> the * means: another file in this project</span>
+<span class="kw">PROC</span> <span class="fn">main</span>()
+  greet(<span class="str">'Amiga'</span>)
+<span class="kw">ENDPROC</span></code></pre>
+<pre><code><span style="color:var(--muted)">-> helper.e</span>
+<span class="kw">OPT MODULE</span>
+<span class="kw">EXPORT PROC</span> <span class="fn">greet</span>(who)
+  <span class="fn">WriteF</span>(<span class="str">'hello, \s!\n'</span>, who)
+<span class="kw">ENDPROC</span></code></pre>
+    <p>Module resolution order: your project file tabs → the bundled v40 OS modules
+       (<code>'dos/dos'</code>, <code>'intuition/intuition'</code>, …). The
+       exec/dos/intuition/graphics calls are preloaded implicitly — <code>OpenW</code>,
+       <code>WriteF</code>, <code>MODE_NEWFILE</code> just work.</p>
+
+    <h2 id="diskbox">The disk box</h2>
+    <p>Your persistent, private, in-browser storage (IndexedDB — survives reloads,
+       multi-GB quota, nothing leaves your machine):</p>
+    <ul>
+      <li><span class="pill">ROM</span> Kickstart images — ↻ selects the active one (shown in the header)</li>
+      <li><span class="pill">DISK</span> ADF floppies — mount via the <b>DF0:–DF2:</b> drive chips (DF0 = boot disk); DF3 is reserved for compiled output</li>
+      <li><span class="pill">HDF</span> hard disk images — attached as DH0 on next boot</li>
+      <li><span class="pill">BIN</span> every compiled binary, automatically</li>
+      <li><span class="pill">PROJECT</span> saved projects (see below)</li>
+    </ul>
+    <p>Every item can be renamed and given a description (✎), downloaded (⤓) or
+       deleted (✕). Drop any mix of files on <b>add</b> — they're sorted by extension.</p>
+
+    <h2 id="projects">Projects</h2>
+    <p><b>save project</b> stores everything — all source files, emulator settings
+       and the output name — as one item in the disk box. ↻ on a project restores
+       the lot. Download it as a <code>.project</code> file to move between machines
+       or share; drop it back on the disk box to import.</p>
+
+    <h2 id="emulator">The emulator</h2>
+    <img class="shot" src="docs/img/ide-workbench-theme.png" alt="The Amiga Workbench theme" />
+    <div class="caption">The <i>Amiga Workbench</i> theme — one of four (Dark, Light, Workbench, Solarized), all WCAG AA checked.</div>
+    <table>
+      <tr><th>Setting</th><th>Notes</th></tr>
+      <tr><td>Model</td><td>A500 – A4000 (default A1200)</td></tr>
+      <tr><td>Fast RAM</td><td>0–8 MB on top of the model's chip RAM</td></tr>
+      <tr><td>hi-res / double scan</td><td>the Amiga's native output resolution</td></tr>
+      <tr><td>Screen size</td><td>1× / 1.5× / 2× / fit pane — display scaling, applies live</td></tr>
+      <tr><td>turbo floppy</td><td>much faster boots; uncheck for authentic drive timing</td></tr>
+      <tr><td>NTSC / audio</td><td>as labelled</td></tr>
+    </table>
+    <h3>Keyboard &amp; mouse</h3>
+    <p><b>Click the Amiga screen to capture input.</b> While captured, every key —
+       including <kbd>Esc</kbd>, which is a real Amiga key — goes to the Amiga.
+       Press the <b>release key</b> (default <kbd>End</kbd>, configurable in
+       emulator settings: End / Home / PageUp / PageDown — none of which exist on
+       an Amiga keyboard) to hand control back to the IDE. While not captured,
+       typing stays safely in the editor even with the emulator running. An
+       optional setting also releases capture when the mouse leaves the pane
+       (off by default). Drag the pane borders to resize the layout.</p>
+
+    <h2 id="under">Under the hood</h2>
+    <ul>
+      <li><b>Compiler:</b> <a href="https://github.com/gin0115/Amiga-E-Compiler-WebBased" target="_blank" rel="noopener">ecomp</a>
+          — zero-dependency JavaScript, E v3.3a semantics validated byte-for-byte
+          against the original compiler (115 differential tests, plus CI that runs
+          the produced binaries under m68k emulation). Included here as a git submodule.</li>
+      <li><b>Delivery:</b> compiled programs are wrapped into disk images in
+          memory — a bootable OFS floppy (DOS mode), an FFS data floppy hot-mounted
+          on DF3, or an RDB-partitioned FFS hard disk image (WB modes). No serial
+          cables, no transfers, no prompts.</li>
+      <li><b>Emulator:</b> <a href="https://github.com/naTmeg/ScriptedAmigaEmulator" target="_blank" rel="noopener">Scripted Amiga Emulator</a> (SAE).</li>
+      <li><b>Editor:</b> CodeMirror with a custom Amiga E mode (nested
+          <code>/* */</code>, <code>-></code> comments, <code>$hex</code>/<code>%bin</code>,
+          E's case-significant identifiers).</li>
+    </ul>
+
+    <h2 id="legal">Files, rights &amp; thanks</h2>
+    <ul>
+      <li>Kickstart ROMs and Workbench disks are <b>not included</b> — use your own
+          or buy them from <a href="https://www.amigaforever.com/plus/" target="_blank" rel="noopener">Amiga Forever</a>.
+          Everything you load stays in your browser.</li>
+      <li>The E v40 modules are © Wouter van Oortmerssen
+          (<a href="https://aminet.net/package/dev/e/amigae33a" target="_blank" rel="noopener">Aminet dev/e/amigae33a</a>),
+          included with his kind permission.</li>
+      <li>IDE and compiler are GPL-3.0:
+          <a href="https://github.com/gin0115/Amiga-E-Web-IDE" target="_blank" rel="noopener">Amiga-E-Web-IDE</a> ·
+          <a href="https://github.com/gin0115/Amiga-E-Compiler-WebBased" target="_blank" rel="noopener">Amiga-E-Compiler-WebBased</a>.</li>
+    </ul>
+  </main>
+  <script>
+    document.documentElement.dataset.theme = localStorage.getItem('ide-theme') || 'dark';
+  </script>
+</body>
+</html>
