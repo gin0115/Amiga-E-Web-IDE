@@ -194,10 +194,14 @@
        the emulator (it cannot wander out of the pane) and the keyboard goes to
        the Amiga. Press the <b>release key</b> (default <kbd>End</kbd>,
        configurable: End / Home / PageUp / PageDown — none exist on an Amiga
-       keyboard) to hand control back to the IDE. <kbd>Esc</kbd> also breaks the
-       lock — that's a browser security rule for pointer capture — just click the
-       screen to recapture. While not captured, typing stays safely in the
-       editor. Drag the pane borders to resize the layout.</p>
+       keyboard) to hand control back to the IDE. </p>
+    <p><b>Need <kbd>Esc</kbd> inside the Amiga?</b> Use <b>⛶ fullscreen</b>: the
+       Keyboard Lock API captures Esc completely for the emulator — Amiga apps
+       get it, nothing exits. In windowed mode the browser reserves Esc to break
+       pointer capture (a security rule no site can override) — when that
+       happens the IDE still <i>forwards the Esc to the Amiga</i> so the program
+       receives it, then waits for a click to recapture. While not captured,
+       typing stays safely in the editor. Drag the pane borders to resize.</p>
 
     <h2 id="under">Under the hood</h2>
     <ul>
