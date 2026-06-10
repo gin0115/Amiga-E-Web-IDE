@@ -1,0 +1,4 @@
+# the IDE is a living dev tool — never let browsers cache the documents
+<FilesMatch "\.(html|js|css)$">
+  Header set Cache-Control "no-cache, must-revalidate"
+</FilesMatch>

@@ -1124,6 +1124,12 @@ for (const type of ['keydown', 'keyup', 'keypress']) {
   document.addEventListener(type, e => {
     if (!window.sae) return;                       // nothing running: normal page
     if (synthesizing) return;                      // forwarded Esc -> SAE
+    // typing in any IDE control NEVER reaches the Amiga, captured or not
+    const ae = document.activeElement;
+    if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) {
+      e.stopImmediatePropagation();
+      return;
+    }
     if (emuCaptured) {
       if (e.key === relKey()) {                    // the safe leave key
         if (type === 'keydown') {
