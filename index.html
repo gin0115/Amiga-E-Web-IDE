@@ -221,7 +221,7 @@
   <script src="./lib/codemirror/simple.min.js?v=1"></script>
   <script src="./adf.js?v=3"></script>
   <script src="./diskbox.js?v=2"></script>
-  <script src="./boot.js?v=5"></script>
+  <script src="./boot.js?v=6"></script>
 </head>
 <body>
   <header>
@@ -342,7 +342,7 @@
               <option value="PageUp">PageUp</option>
               <option value="PageDown">PageDown</option>
             </select>
-            <label><input id="setMouseOut" type="checkbox" /> also release on mouse-out</label>
+
           </div>
           <div class="row">
             <label><input id="setTurbo" type="checkbox" checked /> turbo floppy (fast boots)</label>
@@ -1075,24 +1075,24 @@ $('setRelKey').addEventListener('change', () => {
   localStorage.setItem('ide-relkey', $('setRelKey').value);
   setCapture(emuCaptured);   // refresh label
 });
-$('setMouseOut').checked = localStorage.getItem('ide-mouseout') === '1';
-$('setMouseOut').addEventListener('change', () => {
-  localStorage.setItem('ide-mouseout', $('setMouseOut').checked ? '1' : '0');
-});
 function setCapture(on) {
   emuCaptured = on;
   const el = $('captureState');
-  el.textContent = on ? `⌨ captured — press ${relKey()} to release`
-                      : 'click the screen to capture input';
+  el.textContent = on ? `captured — ${relKey()} releases`
+                      : 'click the screen to capture mouse + keyboard';
   el.className = 'pill' + (on ? ' ok' : '');
   if (on && document.activeElement) document.activeElement.blur();
 }
+// capture state follows the pointer lock itself — locked means captured
+document.addEventListener('pointerlockchange', () => {
+  setCapture(!!document.pointerLockElement);
+});
 for (const type of ['keydown', 'keyup', 'keypress']) {
   document.addEventListener(type, e => {
     if (!window.sae) return;                       // nothing running: normal page
     if (emuCaptured) {
       if (e.key === relKey()) {                    // the safe leave key
-        if (type === 'keydown') setCapture(false);
+        if (type === 'keydown' && document.exitPointerLock) document.exitPointerLock();
         e.stopImmediatePropagation();
         e.preventDefault();
       }
@@ -1102,12 +1102,6 @@ for (const type of ['keydown', 'keyup', 'keypress']) {
     }
   }, true);
 }
-$('emuHost').addEventListener('mousedown', () => {
-  if (window.sae && !emuCaptured) setCapture(true);
-});
-$('emuHost').addEventListener('mouseleave', () => {
-  if (emuCaptured && $('setMouseOut').checked) setCapture(false);
-});
 setCapture(false);
 
 // ---------------- theme ----------------

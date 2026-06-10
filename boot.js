@@ -139,11 +139,10 @@
         ci.file.size = hdfs[u].data.byteLength;
       }
 
-      // cursor mode Hide (not Lock): pointer-lock makes the BROWSER steal
-      // ESC to exit the lock — but ESC is a real Amiga key. With Hide, the
-      // mouse tracks absolutely over the canvas, every key reaches the
-      // Amiga, and "leaving" is just moving the pointer out of the pane.
-      cfg.video.cursor = 1;              // SAEC_Config_Video_Cursor_Hide
+      // cursor mode Lock: click the screen -> the mouse is captured into
+      // the emulator (relative movement, cannot leave the pane). The IDE
+      // releases the lock on the configured key (default End).
+      cfg.video.cursor = 2;              // SAEC_Config_Video_Cursor_Lock
       cfg.video.id = hostId || 'emuHost';
       cfg.video.enabled = true;
       cfg.video.api = SAE_VIDEO_API_CANVAS;
