@@ -25,6 +25,19 @@
 
   var sae = null;
   var scriptsLoaded = false;
+  var stopWaiters = [];
+
+  // sae.stop() is asynchronous — the machine spins down and fires the
+  // 'stopped' hook later. Starting before that yields SAEE_AlreadyRunning(1).
+  function stopAndWait() {
+    return new Promise(function (resolve) {
+      var done = false;
+      var finish = function () { if (!done) { done = true; resolve(); } };
+      stopWaiters.push(finish);
+      try { sae.stop(); } catch (e) { finish(); }
+      setTimeout(finish, 3000);          // safety net
+    });
+  }
 
   function status(msg, isError) {
     (isError ? console.error : console.log)('[amiga-ide]', msg);
@@ -76,7 +89,8 @@
       // event scheduler (runaway current_hpos, 100% CPU). Create ONCE, then
       // stop/reconfigure/restart the same instance for every reboot.
       if (sae) {
-        try { sae.stop(); } catch (e) { /* already stopped */ }
+        status('Stopping previous machine…');
+        await stopAndWait();
       } else {
         var host = document.getElementById(hostId || 'emuHost');
         if (host) host.innerHTML = '';
@@ -144,11 +158,19 @@
       }
       if (cfg.hook && cfg.hook.event) {
         cfg.hook.event.started = function () { status('Running.'); };
-        cfg.hook.event.stopped = function () { status('Stopped.'); };
+        cfg.hook.event.stopped = function () {
+          status('Stopped.');
+          var w = stopWaiters; stopWaiters = [];
+          w.forEach(function (f) { f(); });
+        };
       }
 
       status('Starting emulator…');
       var err = sae.start();
+      if (err === 1) {                   // SAEE_AlreadyRunning: one more spin-down
+        await stopAndWait();
+        err = sae.start();
+      }
       if (err !== SAE_ERR_NONE && err !== undefined) {
         throw new Error('SAE start failed with code ' + err);
       }
