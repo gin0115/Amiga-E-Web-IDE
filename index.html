@@ -64,16 +64,29 @@
       font-family: inherit; font-size: 13px; line-height: 1.45; tab-size: 2;
     }
 
-    /* right column: stacked sections */
-    .section { border-bottom: 1px solid #1c1c2e; }
-    .section > .sect-title {
-      padding: 5px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
-      color: #8a8ab0; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    /* right column: distinct cards, accent-coded headers */
+    #rightPane { background: #07070f; }
+    #rightPane > .section {
+      margin: 8px; border: 1px solid #2a2a44; border-radius: 8px;
+      background: #10101e; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.45);
     }
-    .section > .sect-title:hover { color: #c7c7d9; }
+    .section > .sect-title {
+      padding: 7px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+      color: #c7c7d9; font-weight: 600; display: flex; align-items: center; gap: 8px;
+      cursor: pointer; background: #181830; border-bottom: 1px solid #2a2a44;
+      border-left: 3px solid #5a5a8a;
+    }
+    #sectControls > .sect-title { border-left-color: #3a7a4a; }
+    #sectCompiler > .sect-title { border-left-color: #5a7bff; }
+    #sectFs       > .sect-title { border-left-color: #c8a23a; }
+    #sectBox      > .sect-title { border-left-color: #9a5acf; }
+    #sectSettings > .sect-title { border-left-color: #6a6a88; }
+    .section > .sect-title:hover { background: #1e1e3c; }
     .section > .sect-title .spacer { flex: 1; }
-    .section > .sect-body { padding: 6px 10px 10px; }
+    .section > .sect-body { padding: 8px 12px 12px; }
     .section.collapsed > .sect-body { display: none; }
+    .section.collapsed > .sect-title { border-bottom: none; opacity: .75; }
 
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .controls-grid button, .controls-grid label.btn { text-align: center; }
@@ -86,7 +99,7 @@
     #console {
       margin: 0; padding: 6px 10px; white-space: pre-wrap; word-break: break-word;
       font-size: 12px; line-height: 1.4; color: #b8c8b8; max-height: 180px; overflow: auto;
-      background: #0c0c18;
+      background: #0b0b16; border-radius: 0 0 7px 7px;
     }
     #console .err { color: #ff8a8a; }
     #console .ok  { color: #8affa0; }
@@ -259,8 +272,12 @@ function persistFS() {
   for (const [k, v] of Object.entries(FS)) if (isText(v)) textOnly[k] = v;
   localStorage.setItem('ide-files', JSON.stringify(textOnly));
 }
-function loadIntoEditor(name) {
-  if (current && isText(FS[current])) FS[current] = editor.value;
+let editorBound = false;
+function loadIntoEditor(name, fresh) {
+  // never save the editor back before it has been bound once, and not when
+  // explicitly loading fresh content over the same name (examples)
+  if (editorBound && !fresh && current && isText(FS[current])) FS[current] = editor.value;
+  editorBound = true;
   current = name;
   const v = FS[name];
   editor.value = isText(v) ? v : '';
@@ -334,7 +351,7 @@ $('examples').onchange = e => {
   const ex = EXAMPLES[e.target.value];
   if (!ex) return;
   Object.assign(FS, ex);
-  loadIntoEditor('main.e');
+  loadIntoEditor('main.e', true);
   log("loaded example '" + e.target.value + "'", 'ok');
   e.target.value = '';
 };
@@ -426,37 +443,56 @@ window.onEmuStatus = (msg, isError) => {
   if (isError) log('[emu] ' + msg, 'err');
 };
 
-const pending = { df1: null, df2: null, hdf: null, hdfName: null };
+// drives[0..2] = {name, bytes} chosen by the user (DF0 = boot disk);
+// DF3 stays reserved for compiled output
+const drives = [null, null, null];
+const pending = { hdf: null, hdfName: null };
 let wbBooted = false;
 
 async function getRom() {
-  let rom = await DiskBox.get('rom', 'kickstart.rom');
+  let rom = null, romName = localStorage.getItem('ide-active-rom');
+  if (romName) rom = await DiskBox.get('rom', romName);
+  if (!rom) {
+    const roms = (await DiskBox.list()).filter(i => i.category === 'rom');
+    if (roms.length) {
+      romName = roms[0].name;
+      rom = await DiskBox.get('rom', romName);
+    }
+  }
   if (!rom) {
     try {
       const res = await fetch('./roms/kick31-a1200-40.68.rom');
-      if (res.ok) rom = new Uint8Array(await res.arrayBuffer());
+      if (res.ok) { rom = new Uint8Array(await res.arrayBuffer()); romName = 'kick31-a1200-40.68.rom (bundled)'; }
     } catch { /* none bundled */ }
   }
-  $('romState').textContent = rom ? 'ROM ✓' : 'no ROM';
+  $('romState').textContent = rom ? 'ROM: ' + romName.replace(/\.rom$/i, '') : 'no ROM';
   $('romState').className = 'pill ' + (rom ? 'ok' : 'miss');
+  $('romState').title = rom ? romName : 'no Kickstart ROM set';
   return rom;
 }
 async function getWbDisk() {
-  let wb = await DiskBox.get('disk', 'workbench.adf');
-  if (!wb) {
-    try {
-      const res = await fetch('./disks/workbench31-boot.adf');
-      if (res.ok) wb = new Uint8Array(await res.arrayBuffer());
-    } catch { /* none bundled */ }
+  if (drives[0]) return drives[0].bytes;          // user chose a boot disk
+  const items = (await DiskBox.list()).filter(i => i.category === 'disk');
+  const wbItem = items.find(i => /workbench|wb|boot/i.test(i.name)) || items[0];
+  if (wbItem) {
+    const bytes = await DiskBox.get('disk', wbItem.name);
+    drives[0] = { name: wbItem.name, bytes };
+    renderDrives();
+    return bytes;
   }
-  return wb;
+  try {
+    const res = await fetch('./disks/workbench31-boot.adf');
+    if (res.ok) return new Uint8Array(await res.arrayBuffer());
+  } catch { /* none bundled */ }
+  return null;
 }
 
 $('romInput').onchange = async e => {
   const f = e.target.files[0];
   if (!f) return;
   const bytes = new Uint8Array(await f.arrayBuffer());
-  await DiskBox.put('rom', 'kickstart.rom', bytes);
+  await DiskBox.put('rom', f.name, bytes);          // keep the real name
+  localStorage.setItem('ide-active-rom', f.name);   // and make it active
   log(`Kickstart ROM set: ${f.name} (${fmtSize(bytes.byteLength)}) — saved to disk box`, 'ok');
   getRom();
   renderBox();
@@ -467,13 +503,7 @@ $('diskInput').onchange = async e => {
   if (!f) return;
   const bytes = new Uint8Array(await f.arrayBuffer());
   await DiskBox.put('disk', f.name, bytes);
-  if (window.sae) {
-    const slot = pending.df1 ? 2 : 1;
-    mountADF(slot, bytes, f.name);
-  } else {
-    if (!pending.df1) pending.df1 = bytes; else pending.df2 = bytes;
-    log(`${f.name} queued for next boot (and saved to disk box)`, 'ok');
-  }
+  log(`${f.name} saved to disk box — click a DF chip below to put it in a drive`, 'ok');
   renderBox();
   e.target.value = '';
 };
@@ -489,20 +519,64 @@ $('hdfInput').onchange = async e => {
   e.target.value = '';
 };
 
+function driveLabel(d) {
+  if (d === 3) {
+    if (window.sae) {
+      const dr = window.sae.getConfig().floppy.drive[3];
+      return dr && dr.file && dr.file.name ? dr.file.name.replace(/\.adf$/i, '') : '—';
+    }
+    return '—';
+  }
+  return drives[d] ? drives[d].name.replace(/\.adf$/i, '').slice(0, 14) : '—';
+}
+async function pickDiskFor(slot) {
+  const items = (await DiskBox.list()).filter(i => i.category === 'disk');
+  const menu = document.createElement('div');
+  menu.style.cssText = 'position:fixed;z-index:99;background:#16162a;border:1px solid #5a5a8a;'
+    + 'border-radius:6px;padding:4px;max-height:50vh;overflow:auto;box-shadow:0 4px 16px #000';
+  const add = (label, fn) => {
+    const it = document.createElement('div');
+    it.textContent = label;
+    it.style.cssText = 'padding:5px 12px;cursor:pointer;border-radius:4px';
+    it.onmouseenter = () => it.style.background = '#2a2a55';
+    it.onmouseleave = () => it.style.background = '';
+    it.onclick = () => { menu.remove(); fn(); };
+    menu.appendChild(it);
+  };
+  add('— eject —', () => {
+    drives[slot] = null;
+    if (window.sae) ejectADF(slot);
+    renderDrives();
+  });
+  for (const it of items) {
+    add((slot === 0 ? 'boot: ' : '') + it.name, async () => {
+      const bytes = await DiskBox.get('disk', it.name);
+      drives[slot] = { name: it.name, bytes };
+      if (window.sae && slot > 0) mountADF(slot, bytes, it.name);
+      else if (slot === 0) log(it.name + ' set as the DF0 boot disk — (re)boot to use it', 'ok');
+      else log(it.name + ' queued for DF' + slot + ' on next boot', 'ok');
+      renderDrives();
+    });
+  }
+  if (!items.length) add('(disk box is empty — use "Add disk")', () => {});
+  document.body.appendChild(menu);
+  const close = e => { if (!menu.contains(e.target)) { menu.remove(); window.removeEventListener('mousedown', close); } };
+  setTimeout(() => window.addEventListener('mousedown', close), 0);
+  return menu;
+}
 function renderDrives() {
   const bar = $('driveBar');
   bar.innerHTML = '';
   for (let d = 0; d <= 3; d++) {
     const chip = document.createElement('span');
     chip.className = 'drivechip' + (d === 3 ? ' df3' : '');
-    let label = 'DF' + d + ':';
-    if (window.sae) {
-      const drive = window.sae.getConfig().floppy.drive[d];
-      label += drive && drive.file && drive.file.name ? drive.file.name.replace(/\.adf$/i, '') : '—';
-    } else label += '—';
-    chip.textContent = label;
-    chip.title = d === 3 ? 'DF3 is reserved for compiled output' : 'click to eject';
-    if (d !== 3) chip.onclick = () => { if (window.sae) { ejectADF(d); renderDrives(); } };
+    chip.textContent = 'DF' + d + ':' + driveLabel(d);
+    chip.title = d === 3 ? 'DF3 is reserved for compiled output' : 'click to choose a disk from the disk box';
+    if (d !== 3) chip.onclick = async e => {
+      const menu = await pickDiskFor(d);
+      menu.style.left = Math.min(e.clientX, innerWidth - 280) + 'px';
+      menu.style.top = (e.clientY + 8) + 'px';
+    };
     bar.appendChild(chip);
   }
 }
@@ -514,7 +588,9 @@ async function bootWb() {
   const wb = await getWbDisk();
   if (!wb) { log('No Workbench ADF — add one with "Add disk".', 'err'); return false; }
   const ok = await bootEmulator(
-    { rom, df0: wb, df0Name: 'workbench.adf', df1: pending.df1, df2: pending.df2, hdf: pending.hdf, hdfName: pending.hdfName },
+    { rom, df0: wb, df0Name: drives[0] ? drives[0].name : 'workbench.adf',
+      df1: drives[1] && drives[1].bytes, df2: drives[2] && drives[2].bytes,
+      hdf: pending.hdf, hdfName: pending.hdfName },
     readSettings(), 'emuHost');
   wbBooted = ok;
   setTimeout(renderDrives, 500);
@@ -599,10 +675,20 @@ async function renderBox() {
     use.onclick = async e => {
       e.stopPropagation();
       const bytes = await DiskBox.get(it.category, it.name);
-      if (it.category === 'rom') { log('ROM selected from disk box', 'ok'); }
+      if (it.category === 'rom') {
+        localStorage.setItem('ide-active-rom', it.name);
+        log(it.name + ' is now the active Kickstart ROM', 'ok');
+        getRom();
+      }
       else if (it.category === 'disk') {
-        if (window.sae) mountADF(1, bytes, it.name);
-        else { pending.df1 = bytes; log(it.name + ' queued for DF1 on next boot', 'ok'); }
+        if (window.sae) {
+          drives[1] = { name: it.name, bytes };
+          mountADF(1, bytes, it.name);
+        } else {
+          drives[0] = { name: it.name, bytes };
+          log(it.name + ' set as the DF0 boot disk — use the DF chips to place it elsewhere', 'ok');
+        }
+        renderDrives();
       } else if (it.category === 'hdf') {
         pending.hdf = bytes; pending.hdfName = it.name;
         log(it.name + ' set as DH0: for next boot', 'ok');
