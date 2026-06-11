@@ -1,14 +1,18 @@
 # amiga-ide — Handover
 
-**Updated:** 2026-06-10 (end of the big build session)
+**Updated:** 2026-06-11 (docs site + live amiga-e.com deploy session)
 **Location:** `/media/glynn/2024/devilbox_public/ai-detective/amiga-ide/`
-**Served at:** `http://ai-detective.gq/amiga-ide/` (devilbox, via symlink `htdocs/amiga-ide -> ../amiga-ide`)
+**Served at (dev):** `http://ai-detective.gq/amiga-ide/` (devilbox, via symlink `htdocs/amiga-ide -> ../amiga-ide`)
+**Served at (LIVE):** `https://amiga-e.com/` (Plesk, auto-deploys on push — see §9)
 **Serving rule:** devilbox/Docker serves the working tree directly. Do NOT run
 `python -m http.server`. `.htaccess` sets no-cache for html/js/css — stale
 pages cost several debugging rounds before that existed.
-**Repos (both GPL-3.0, user merges PRs):**
+**Repos (GPL-3.0):**
 - IDE: `git@github.com:gin0115/Amiga-E-Web-IDE.git`
 - Compiler: `git@github.com:gin0115/Amiga-E-Compiler-WebBased.git` (submodule at `ecomp/`)
+- Docs site: `git@github.com:gin0115/Amiga-E-Docs-Site.git` (submodule at `docs/`,
+  generated — never edit its HTML; it is published from the private
+  `AmigaE-Docs` research repo by `amiga-e/publish_site.sh`)
 
 ---
 
@@ -81,8 +85,11 @@ distro, position-neutralised) so programs are double-clickable icons.
   (DF0 = boot disk); DF3 reserved for COMPILED.
 - Projects: files+settings+output-name as `.project` JSON in the disk box.
 - `about.html`: guides + clean screenshots (self-captured via injected
-  html2canvas → user saves dialogs into `docs/img/`; NEVER reuse the user's
-  annotated bug screenshots). Linked from header; Buy ROMs → Amiga Forever.
+  html2canvas → user saves dialogs into `.github/img/`; NEVER reuse the
+  user's annotated bug screenshots — moved from `docs/img/` to free `docs/`
+  for the submodule). Linked from header; Buy ROMs → Amiga Forever.
+- Top bar has a **docs** button (new tab → `docs/`) beside about & guides;
+  every docs page carries a depth-aware "← Web IDE" link back.
 
 ## 6. Example programs (dropdown)
 
@@ -116,14 +123,45 @@ and playtested this session:
   generating the payload with `JSON.stringify` (twice). E string literals
   cannot contain raw newline bytes.
 
-## 8. Open / next
+## 8. The docs site (`docs/` submodule)
+
+Full Amiga E reference (1,379 pages: language guide, stdlib, modules,
+tooling, community) generated from the private `AmigaE-Docs` repo
+(`ai-detective/amiga-e/`). Publish flow: edit there → `./publish_site.sh`
+→ commit+push in `ai-detective/Amiga-E-Docs-Site/` → live via webhook.
+The publish pipeline: rsync (excludes elist/examples — privacy/©) →
+sanitize db (drop 1998-99 mailing list) → mask ALL emails to `user@…` →
+inject "← Web IDE" links → gzip db → pagefind search index.
+
+- **Search** = Pagefind 1.5.2 (standalone binary, `amiga-e/research/bin/`,
+  gitignored). bundlePath MUST be absolute (`new URL(...).pathname`) —
+  pagefind-ui's dynamic import resolves relative to its own module URL.
+- **Data Explorer** = sql.js + `kb/amiga-e.datz` (gzip, 11 MB), inflated
+  client-side with DecompressionStream. It is gzipped because the live
+  host's WAF content-sniffs raw SQLite and 403s it under ANY filename;
+  it also 403s any directory literally named `data/`.
+
+## 9. Live deploy (amiga-e.com — Plesk)
+
+Plesk panel: `inspiring-moser.87-106-103-125.plesk.page:8443`, site_id 18.
+Three Plesk Git repos, each with a GitHub push webhook (set up 2026-06-11),
+auto-deploying: IDE → `/httpdocs`, Amiga-E-Docs-Site → `/httpdocs/docs`,
+Amiga-E-Compiler-WebBased → `/httpdocs/ecomp`.
+
+- Plesk does **NOT** process git submodules, and its "additional deployment
+  actions" run in a chrooted shell with NO git binary — never put git
+  commands there. A new submodule in the IDE needs a matching new Plesk repo.
+- fail2ban bans IPs that poll the site every few seconds — don't curl-loop it.
+- Keep the Plesk browser tab alive during long panel sessions (auto-logout).
+
+## 10. Open / next
 
 - HDD delivery (RDB unit 0) not yet user-verified end-to-end live (floppy
   mode is the proven daily path).
 - `prog.info` could set a default tool / console wrapper so `WriteF` output
   is visible from desktop launches.
-- **amiga-e.com**: user owns it (Plesk + Namecheap DNS seen) — public
-  hosting next. Repo is publish-clean (gitignore: roms/disks/vendor/build;
-  modules tracked with permission; LICENSE GPL-3.0 + NOTICE).
+- `docs` submodule pointer lags the site repo by a few commits — bump it on
+  the next IDE commit (live site unaffected; Plesk deploys the site repo
+  directly).
 - Compiler-side polish list lives in the ecomp memory/status notes
   (corpus unknown-member tail, Gadget() builtin, .m writer extras).
