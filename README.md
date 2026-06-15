@@ -12,13 +12,13 @@ all client-side, no server.
 
 ## Screenshots
 
-![Compile & Run (DOS): code compiled in-browser, running in the AmigaDOS shell](.github/img/ide-dark-dos-run.png)
+![Compile & Run (DOS): code compiled in-browser, running in the AmigaDOS shell](assets/img/ide-dark-dos-run.png)
 *Compile & Run (DOS) — compiled in milliseconds, booted straight into the program.*
 
-![The COMPILED drive delivered into a running Workbench](.github/img/ide-wb-compiled.png)
+![The COMPILED drive delivered into a running Workbench](assets/img/ide-wb-compiled.png)
 *Compile & Run (WB) — the COMPILED drive appears on the live desktop, program icon included.*
 
-![The Amiga Workbench theme](.github/img/ide-workbench-theme.png)
+![The Amiga Workbench theme](assets/img/ide-workbench-theme.png)
 *One of four themes — Dark, Light, Amiga Workbench, Solarized (all WCAG AA checked).*
 
 ## Layout
