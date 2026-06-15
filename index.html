@@ -557,10 +557,15 @@ async function fetchModule(name) {
   const key = name.toLowerCase();
   if (moduleCache.has(key)) return moduleCache.get(key);
   let mod = null;
-  try {
-    const res = await fetch('./ecomp/modules/' + key + '.m');
-    if (res.ok) mod = readEmod(new Uint8Array(await res.arrayBuffer()), name);
-  } catch { /* absent */ }
+  // Try the lowercased path, then the original case. Mixed-case module
+  // files (e.g. tools/EasyGUI.m) 404 on a case-sensitive host if we only
+  // ask for the lowercased name — mirrors ecomp/tools/modules.js.
+  for (const cand of key === name ? [key] : [key, name]) {
+    try {
+      const res = await fetch('./ecomp/modules/' + cand + '.m');
+      if (res.ok) { mod = readEmod(new Uint8Array(await res.arrayBuffer()), name); break; }
+    } catch { /* absent */ }
+  }
   moduleCache.set(key, mod);
   return mod;
 }
