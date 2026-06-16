@@ -10,6 +10,12 @@ disks/
 # vendored SAE emulator engine (separate project)
 vendor/
 
+# ecomp (compiler) and docs (docs site) are independent repos, deployed
+# separately (pulled into /ecomp and /docs on the server). The IDE repo does
+# NOT track them — working copies live here for local dev but are ignored.
+ecomp/
+docs/
+
 # local experiments / build scratch
 build/
 *.log
