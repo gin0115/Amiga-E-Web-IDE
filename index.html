@@ -590,10 +590,19 @@ async function fetchModule(name) {
   // Try the lowercased path, then the original case. Mixed-case module
   // files (e.g. tools/EasyGUI.m) 404 on a case-sensitive host if we only
   // ask for the lowercased name — mirrors ecomp/tools/modules.js.
+  // IMPORTANT: some hosts "soft-404" — they answer a missing path with HTTP 200
+  // and a JSON/HTML body instead of a 404. So res.ok is not enough; we must
+  // confirm the body is a real EMOD (readEmod sets .error otherwise) and only
+  // then accept it, else fall through to the next candidate. Without this, the
+  // lowercase candidate's soft-404 body is mis-accepted and the correct-case
+  // file is never tried, breaking every mixed-case module (EasyGUI, …).
   for (const cand of key === name ? [key] : [key, name]) {
     try {
       const res = await fetch('./ecomp/modules/' + cand + '.m');
-      if (res.ok) { mod = readEmod(new Uint8Array(await res.arrayBuffer()), name); break; }
+      if (res.ok) {
+        const m = readEmod(new Uint8Array(await res.arrayBuffer()), name);
+        if (!m.error) { mod = m; break; }
+      }
     } catch { /* absent */ }
   }
   moduleCache.set(key, mod);
