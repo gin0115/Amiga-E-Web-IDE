@@ -188,6 +188,7 @@
       <tr><td>Screen size</td><td>1× / 1.5× / 2× / fit pane — display scaling, applies live</td></tr>
       <tr><td>turbo floppy</td><td>much faster boots; uncheck for authentic drive timing</td></tr>
       <tr><td>NTSC / audio</td><td>as labelled</td></tr>
+      <tr><td>40.68 floating-point fix</td><td>off by default — patches Kickstart 3.1 rev 40.68's broken math library so floating point works (<a href="#fp4068">see below</a>)</td></tr>
     </table>
     <h3>Keyboard &amp; mouse</h3>
     <p><b>Click the Amiga screen to capture input.</b> The mouse is locked into
@@ -203,12 +204,52 @@
        receives it, then waits for a click to recapture. While not captured,
        typing stays safely in the editor. Drag the pane borders to resize.</p>
 
+    <h3 id="fp4068">The Kickstart 40.68 floating-point fix</h3>
+    <p>One specific ROM has a real flaw worth knowing about.
+       <b>Kickstart 3.1 rev 40.68</b> — the stock A1200 ROM, and the version
+       most people own — ships a <code>mathieeesingbas.library</code> whose
+       software <i>multiply</i> and <i>divide</i> vectors are mis-aimed: their
+       jump-table offsets in ROM (at <code>$FC1B92</code>) point into a data
+       table instead of into code. So any floating-point multiply or divide
+       Gurus with <b>Software Failure&nbsp;#8000000B</b> — a crash that
+       <i>looks</i> like a missing FPU but has nothing to do with one. (The
+       program, the compiler and the emulator are all fine; the ROM's software
+       math routine is simply pointed at the wrong address.)</p>
+    <p>On a real Amiga you never hit this, because the Workbench
+       startup-sequence runs <b>SetPatch</b>, which repairs the broken vectors
+       at boot. The IDE boots straight into your program with no
+       startup-sequence, so the raw ROM bug is exposed. Commodore themselves
+       fixed it one revision later (40.69), and Harry Sintonen's well-known
+       patched 40.68 applies the identical four-byte change.</p>
+    <p>Tick <b>40.68 floating-point fix</b> in <i>Emulator settings</i> and the
+       IDE applies that same four-byte fix
+       (<code>00&nbsp;1A&nbsp;00&nbsp;1C</code> →
+       <code>06&nbsp;36&nbsp;06&nbsp;A0</code>) to the ROM <i>in memory</i> just
+       before boot, re-computes the ROM checksum so the image still
+       self-validates, and floating point works. It is gated on the exact broken
+       byte signature, so it is a strict <b>no-op on every other ROM</b> (40.69,
+       3.2, A4000, …), and your stored ROM file is never modified. It is
+       <b>off by default</b> to keep emulation byte-accurate — and the emulator
+       core itself is never touched; the fix lives entirely in the IDE.</p>
+
     <h2 id="under">Under the hood</h2>
     <ul>
       <li><b>Compiler:</b> <a href="https://github.com/gin0115/Amiga-E-Compiler-WebBased" target="_blank" rel="noopener">ecomp</a>
           — zero-dependency JavaScript, E v3.3a semantics validated byte-for-byte
           against the original compiler (115 differential tests, plus CI that runs
           the produced binaries under m68k emulation). Included here as a git submodule.</li>
+      <li><b>Linker:</b> ecomp links your program against the original
+          EC-built binary <code>.m</code> modules — EasyGUI and the
+          <code>tools/</code>&thinsp;/&thinsp;<code>std/</code> set — by reading
+          the reverse-engineered <b>EMOD</b> format directly: it rebases
+          absolute <i>and</i> <i>ifunc</i> relocations, binds A4-relative
+          globals and cross-module class inheritance (so <code>NEW</code> of an
+          inherited class resolves across modules), and emits a standard Amiga
+          <b>HUNK</b> executable. The linked output matches EC's byte-for-byte
+          behaviour under emulation, and the emitted code is <b>68000-safe</b>
+          (an earlier version leaked 68020-only opcodes into the glue — now it
+          runs on a plain 68000). A binary-module link suite (EasyGUI plus a
+          third-party module resolved through the module path) guards it in CI.</li>
       <li><b>Delivery:</b> compiled programs are wrapped into disk images in
           memory — a bootable OFS floppy (DOS mode), an FFS data floppy hot-mounted
           on DF3, or an RDB-partitioned FFS hard disk image (WB modes). No serial

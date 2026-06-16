@@ -378,6 +378,10 @@
             <label><input id="setAudio" type="checkbox" checked /> audio</label>
             <span class="meta">applies on next boot</span>
           </div>
+          <div class="row">
+            <label><input id="setFpFix" type="checkbox" /> 40.68 floating-point fix</label>
+            <span class="meta">patches Kickstart 3.1 rev 40.68's broken math library (SPMul/SPDiv — the Harry Sintonen fix). No-op on any other ROM. Applies on next boot.</span>
+          </div>
         </div>
       </div>
     </section>
@@ -779,6 +783,7 @@ $('setVdouble').checked = settings.vdouble !== false;
 $('setNtsc').checked = !!settings.ntsc;
 $('setTurbo').checked = settings.turboFloppy !== false;
 $('setAudio').checked = settings.audio !== false;
+$('setFpFix').checked = !!settings.fpFix;
 function readSettings() {
   const s = {
     model: $('setModel').value,
@@ -788,12 +793,46 @@ function readSettings() {
     ntsc: $('setNtsc').checked,
     turboFloppy: $('setTurbo').checked,
     audio: $('setAudio').checked,
+    fpFix: $('setFpFix').checked,
   };
   localStorage.setItem('ide-settings', JSON.stringify(s));
   return s;
 }
-for (const id of ['setModel', 'setFast', 'setHires', 'setVdouble', 'setNtsc', 'setTurbo', 'setAudio']) {
+for (const id of ['setModel', 'setFast', 'setHires', 'setVdouble', 'setNtsc', 'setTurbo', 'setAudio', 'setFpFix']) {
   $(id).addEventListener('change', readSettings);
+}
+
+// ---- Kickstart 3.1 rev 40.68 floating-point fix (opt-in) ----
+// 40.68's ROM mathieeesingbas has two bad jump-table offsets at $FC1B92
+// (00 1A / 00 1C) that point into a data table, so every float multiply/divide
+// Gurus #8000000B. Harry Sintonen's fix repoints them to the real software
+// routines (06 36 / 06 A0). We apply the same 4-byte patch in memory, gated on
+// the exact broken signature, so it is a strict no-op on every other ROM.
+function applyFpFix(rom) {
+  if (!rom || !$('setFpFix')?.checked || rom.length < 0x41B96) return rom;
+  const SIG = [0x00, 0x1A, 0x00, 0x1C];
+  for (let i = 0; i < 4; i++) if (rom[0x41B92 + i] !== SIG[i]) return rom; // not the broken 40.68
+  const fixed = Uint8Array.from(rom);            // never mutate the stored ROM
+  fixed.set([0x06, 0x36, 0x06, 0xA0], 0x41B92);
+  fixKickstartChecksum(fixed);
+  log('40.68 floating-point fix applied (mathieeesingbas SPMul/SPDiv — Harry Sintonen)', 'ok');
+  return fixed;
+}
+// Recompute the ROM's footer checksum (longword at size-24) so the patched image
+// self-validates: sum of all big-endian longwords with end-around carry must be 0xFFFFFFFF.
+function fixKickstartChecksum(rom) {
+  const csOff = rom.length - 24;
+  rom[csOff] = rom[csOff + 1] = rom[csOff + 2] = rom[csOff + 3] = 0;
+  let sum = 0;
+  for (let o = 0; o < rom.length; o += 4) {
+    sum += (rom[o] * 0x1000000) + (rom[o + 1] << 16) + (rom[o + 2] << 8) + rom[o + 3];
+    if (sum > 0xFFFFFFFF) sum = sum - 0x100000000 + 1;
+  }
+  const cs = 0xFFFFFFFF - sum;
+  rom[csOff]     = Math.floor(cs / 0x1000000) & 0xFF;
+  rom[csOff + 1] = (cs >>> 16) & 0xFF;
+  rom[csOff + 2] = (cs >>> 8) & 0xFF;
+  rom[csOff + 3] = cs & 0xFF;
 }
 for (const sect of document.querySelectorAll('.section > .sect-title')) {
   sect.addEventListener('click', e => {
@@ -952,7 +991,7 @@ function renderDrives() {
 renderDrives();
 
 async function bootWb() {
-  const rom = await getRom();
+  const rom = applyFpFix(await getRom());
   if (!rom) { log('Set a Kickstart ROM first (Build & Run panel).', 'err'); return false; }
   const wb = await getWbDisk();
   if (!wb) { log('No Workbench ADF — add one with "Add disk".', 'err'); return false; }
@@ -982,7 +1021,7 @@ function download(name, bytes) {
 $('btnRunDos').onclick = async () => {
   const bin = await compileMain();
   if (!bin) return;
-  const rom = await getRom();
+  const rom = applyFpFix(await getRom());
   if (!rom) { log('Set a Kickstart ROM first.', 'err'); return; }
   const adf = bootableAdf(bin, { volume: 'ECOMP', command: 'prog' });
   log('booting straight into your program (DOS shell)…', 'ok');
@@ -1102,6 +1141,7 @@ async function loadProject(boxName) {
     $('setNtsc').checked = !!proj.settings.ntsc;
     $('setTurbo').checked = proj.settings.turboFloppy !== false;
     $('setAudio').checked = proj.settings.audio !== false;
+    $('setFpFix').checked = !!proj.settings.fpFix;
   }
   loadIntoEditor(FS['main.e'] !== undefined ? 'main.e' : Object.keys(FS)[0], true);
   log(`project "${boxName.replace(/\.project$/, '')}" loaded (files + settings)`, 'ok');
