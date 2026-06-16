@@ -247,6 +247,7 @@
       <option value="rpneval">📟 Big: RPN evaluator (parser + stack module)</option>
       <option value="primes">📟🖥️ Big: animated prime sieve (stack + graphics)</option>
       <option value="egprimes">📟🖥️ Big: EasyGUI prime finder (3 modules)</option>
+      <option value="oostring">📟 OOP: binary 'string' class (oomodules)</option>
     </select>
     <div class="spacer"></div>
     <a href="./docs/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:12px;border:1px solid var(--border);border-radius:5px;padding:4px 10px;background:var(--control)">docs</a>
@@ -561,6 +562,7 @@ const EXAMPLES = {
   rpneval: { 'main.e': "MODULE 'tools/stack'\n-> A full RPN expression evaluator: tokenises a postfix string character\n-> by character and evaluates it with the binary stack module (tools/stack).\nPROC main()\n  DEF s:PTR TO stack, expr:PTR TO CHAR, i, len, c, num, a, b\n  expr := '15 7 1 1 + - / 3 *'\n  NEW s.stack()\n  WriteF('expression: \\s\\n', expr)\n  len := StrLen(expr)\n  i := 0\n  WHILE i < len\n    c := expr[i]\n    IF (c >= \"0\") AND (c <= \"9\")\n      num := 0\n      WHILE (i < len) AND (expr[i] >= \"0\") AND (expr[i] <= \"9\")\n        num := (num * 10) + (expr[i] - \"0\")\n        i := i + 1\n      ENDWHILE\n      s.push(num)\n    ELSEIF (c = \"+\") OR (c = \"-\") OR (c = \"*\") OR (c = \"/\")\n      b := s.pop()\n      a := s.pop()\n      IF c = \"+\" THEN s.push(a + b)\n      IF c = \"-\" THEN s.push(a - b)\n      IF c = \"*\" THEN s.push(a * b)\n      IF c = \"/\" THEN s.push(a / b)\n      i := i + 1\n    ELSE\n      i := i + 1\n    ENDIF\n  ENDWHILE\n  WriteF('result:     \\d\\n', s.pop())\n  END s\nENDPROC" },
   primes: { 'main.e': "MODULE 'tools/stack'\n-> Animated Sieve of Eratosthenes. Sieves 2..N in a grid window: each prime\n-> lights up and is pushed onto the binary stack module; its multiples are\n-> struck out. Afterwards the primes are popped back off to prove the module\n-> held them all, and the count + largest are shown.\nCONST N=199, COLS=20, CELL=15\n\nDEF flag[200]:ARRAY OF CHAR\n\nPROC cell(n, col)\n  DEF x, y\n  x := 6 + Mod(n, COLS) * CELL\n  y := 24 + (n / COLS) * CELL\n  Box(x, y, x+CELL-3, y+CELL-3, col)\nENDPROC\n\nPROC main()\n  DEF w, s:PTR TO stack, i, j, count, last, popped\n  w := OpenW(0, 0, COLS*CELL+12, 200, $200, $100F, 'Prime Sieve', NIL, 1, NIL)\n  IF w = NIL THEN RETURN\n  NEW s.stack()\n  FOR i := 0 TO N DO flag[i] := 1\n  flag[0] := 0\n  flag[1] := 0\n  TextF(6, 16, 'sieving 2..\\d ...', N)\n  count := 0\n  last := 0\n  FOR i := 2 TO N\n    IF flag[i]\n      cell(i, 3)\n      s.push(i)\n      count := count + 1\n      last := i\n      j := i + i\n      WHILE j <= N\n        IF flag[j] THEN flag[j] := 0\n        cell(j, 1)\n        j := j + i\n      ENDWHILE\n      Delay(3)\n    ENDIF\n  ENDFOR\n  TextF(6, 16, '\\d primes found, largest = \\d   ', count, last)\n  popped := 0\n  WHILE s.is_empty() = FALSE\n    j := s.pop()\n    popped := popped + 1\n  ENDWHILE\n  TextF(6, 192, 'popped \\d primes back off the stack', popped)\n  Delay(250)\n  CloseW(w)\nENDPROC" },
   egprimes: { 'main.e': "-> Prime Finder - an EasyGUI proof of concept that links THREE binary modules:\n-> tools/EasyGUI (the GUI), tools/stack (holds the primes) and tools/exceptions.\n-> Type a limit, press [Find Primes]: a Sieve of Eratosthenes runs and the count\n-> and largest prime update live in the window. {action} procs are the callbacks.\nMODULE 'tools/EasyGUI',\n       'tools/stack',\n       'tools/exceptions'\n\nDEF limit, flags[2001]:ARRAY OF CHAR\n\nPROC main() HANDLE\n  limit := 100\n  easyguiA('Prime Finder',\n    [ROWS,\n      [TEXT, 'Sieve of Eratosthenes - primes kept on a stack module', NIL, FALSE, 52],\n      [INTEGER, {oninput}, 'count up to:', 100, 5],\n      [INTEGER, {countgad}, 'primes found:', 0, 5, NIL, NIL, TRUE],\n      [INTEGER, {lastgad}, 'largest prime:', 0, 5, NIL, NIL, TRUE],\n      [COLS,\n        [BUTTON, {calc}, 'Find Primes'],\n        [BUTTON, 0, 'Quit']\n      ]\n    ])\nEXCEPT DO\n  report_exception()\nENDPROC\n\nPROC oninput(qual, data, info, newnum)\n  limit := newnum\nENDPROC\n\nPROC countgad(qual, data, info, newnum)\nENDPROC\n\nPROC lastgad(qual, data, info, newnum)\nENDPROC\n\nPROC calc(qual, data, info)\n  DEF s:PTR TO stack, i, j, count, last\n  IF limit < 2 THEN limit := 2\n  IF limit > 2000 THEN limit := 2000\n  NEW s.stack()\n  FOR i := 0 TO limit DO flags[i] := 1\n  flags[0] := 0\n  flags[1] := 0\n  count := 0\n  last := 0\n  FOR i := 2 TO limit\n    IF flags[i]\n      s.push(i)\n      count := count + 1\n      last := i\n      j := i + i\n      WHILE j <= limit\n        flags[j] := 0\n        j := j + i\n      ENDWHILE\n    ENDIF\n  ENDFOR\n  END s\n  setnum(info, {countgad}, count)\n  setnum(info, {lastgad}, last)\nENDPROC" },
+  oostring: { 'main.e': "-> OOP binary-module showcase: the 'string' class (oomodules/sort/string) is a\n-> precompiled .m whose methods internally NEW sub-objects. ecomp links AND runs\n-> it identically to the real EC compiler.\nMODULE 'oomodules/sort/string'\n\nPROC main() HANDLE\n  DEF a:PTR TO string, b:PTR TO string\n  NEW a.new([\"set\", 'Amiga'])\n  NEW b.new([\"set\", 'E'])\n  WriteF('a = \"\\s\"  (length \\d)\\n', a.write(), a.length())\n  WriteF('b = \"\\s\"  (length \\d)\\n', b.write(), b.length())\n  a.cat(' rocks')\n  WriteF('after a.cat:       \"\\s\"\\n', a.write())\n  a.catString(b)\n  WriteF('after a.catString: \"\\s\"\\n', a.write())\n  WriteF('a less than b?     \\s\\n', IF a.lt(b) THEN 'yes' ELSE 'no')\n  WriteF('class name:        \"\\s\"\\n', a.name())\n  END a\n  END b\n  WriteF('done.\\n')\nEXCEPT DO\n  IF exception THEN WriteF('caught exception\\n')\nENDPROC" },
 };
 $('examples').onchange = e => {
   const ex = EXAMPLES[e.target.value];
@@ -612,7 +614,23 @@ async function compileMain() {
   if (pe.length) { pe.slice(0, 6).forEach(er => log(`main.e:${er.line}:${er.col} ${er.msg}`, 'err')); return null; }
   const wanted = ['exec', 'dos', 'intuition', 'graphics',
     ...program.decls.filter(d => d.kind === 'Module').flatMap(d => d.names)];
-  for (const name of wanted) if (editorModule(name) === undefined) await fetchModule(name);
+  // Pre-fetch imported modules AND their transitive MODINFO parents. Binary
+  // class modules (the oomodules, afc classes, …) reference parent-class
+  // modules via MODINFO; the synchronous resolveModule below can only hand back
+  // modules already in moduleCache, so we must walk the whole graph up front.
+  const queue = [...wanted], visited = new Set();
+  while (queue.length) {
+    const name = queue.shift();
+    const key = name.toLowerCase();
+    if (visited.has(key)) continue;
+    visited.add(key);
+    if (editorModule(name) !== undefined) continue;   // editor-supplied source module
+    const mod = await fetchModule(name);
+    for (const mi of mod?.modinfo ?? []) {
+      const sub = mi.submodule.replace(/^emodules:/, '').replace(/\.m$/, '');
+      if (sub && !visited.has(sub.toLowerCase())) queue.push(sub);
+    }
+  }
   const sem = analyze(program, {
     resolveModule: n => {
       const ed = editorModule(n);
