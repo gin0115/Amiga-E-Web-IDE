@@ -259,6 +259,10 @@
       <option value="snake">🖥️🎮 Game: SNAKE (arrow keys) — own screen, player-picked size</option>
       <option value="invaders">🖥️🎮 Game: SPACE INVADERS (keys) — own screen, player-picked size</option>
       <option value="asteroids">🖥️🎮 Game: ASTEROIDS (keys) — vector ship, own screen, picked size</option>
+      <option value="evoshift">📟 E-VO: bit shifts, ~ and // comments (evo)</option>
+      <option value="evogrid">📟 E-VO: 2D arrays — multiplication table (evo)</option>
+      <option value="evotry">📟 E-VO: TRY / CATCH exception handling (evo)</option>
+      <option value="evostr">📟 E-VO: extended string library (evo)</option>
     </select>
     <div class="spacer"></div>
     <a href="./docs/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:12px;border:1px solid var(--border);border-radius:5px;padding:4px 10px;background:var(--control)">docs</a>
@@ -310,6 +314,7 @@
           <div class="spacer"></div>
           <label class="iconbtn" style="cursor:pointer" title="link a precompiled binary .m module (custom / third-party)">+ module<input id="moduleInput" type="file" accept=".m" multiple hidden /></label>
           <label style="text-transform:none;letter-spacing:0;color:#8a8ab0;cursor:pointer" title="full link log: each module + final hunk/reloc/global sizes"><input id="setVerbose" type="checkbox" style="vertical-align:middle" /> verbose</label>
+          <label style="text-transform:none;letter-spacing:0;color:#8a8ab0" title="language dialect: Native = classic EC v3.3a (1997); E-VO = modern Amiga E extensions (// comments, +=, ANDALSO, multi-dim arrays, TRY/CATCH, BYTE/WORD, the E-VO stdlib, …)">lang:<select id="setEvo" style="font:inherit;background:#0c0c18;color:#c7c7d9;border:1px solid #3a3a5a;border-radius:4px;margin-left:4px" onclick="event.stopPropagation()"><option value="">Native (EC 3.3a)</option><option value="evo">E-VO</option></select></label>
           <label style="text-transform:none;letter-spacing:0;color:#8a8ab0">output:</label>
           <input id="outName" type="text" value="prog" style="width:96px;font:inherit;background:#0c0c18;color:#c7c7d9;border:1px solid #3a3a5a;border-radius:4px;padding:2px 6px" onclick="event.stopPropagation()" />
           <button id="btnClear">clear</button>
@@ -635,6 +640,10 @@ const EXAMPLES = {
   dll: { 'main.e': "-> Doubly-linked list via the binary other/dll module: build a list (addHead /\n-> addTail), then walk it with firstNode / nodeSucc. Nodes come from\n-> tools/constructors (newnode). Two precompiled .m modules linked together.\nMODULE 'other/dll', 'exec/lists', 'exec/nodes', 'tools/constructors'\n\nPROC main()\n  DEF l:lh, n:PTR TO ln\n  newList(l)\n  IF listIsEmpty(l) THEN WriteF('list starts empty\\n')\n  addTail(l, newnode(NIL, 'banana', 0, 0))\n  addTail(l, newnode(NIL, 'cherry', 0, 0))\n  addHead(l, newnode(NIL, 'apple', 0, 0))\n  WriteF('walking the list head->tail:\\n')\n  n := firstNode(l)\n  WHILE nodeSucc(n)\n    WriteF('  - \\s\\n', n.name)\n    n := nodeSucc(n)\n  ENDWHILE\nENDPROC" },
   lexer: { 'main.e': "-> Tokeniser using the binary tools/simplelex module (6 module-private globals).\n-> lex_init() points it at a writable buffer; lex() returns the next token type\n-> plus its attribute (the value for integers).\nMODULE 'tools/simplelex'\n\nPROC main()\n  DEF buf[40]:STRING, t, at, n\n  StrCopy(buf, 'foo 123 bar 456 baz')\n  WriteF('tokenising: \"\\s\"\\n', buf)\n  lex_init(buf, StrLen(buf), TRUE, \"#\")\n  n := 0\n  REPEAT\n    t, at := lex()\n    IF t = LEX_INTEGER\n      WriteF('  INTEGER = \\d\\n', at)\n    ELSEIF t = LEX_IDENT\n      WriteF('  IDENT\\n')\n    ENDIF\n    n := n + 1\n  UNTIL (t = LEX_EOF) OR (n > 10)\n  WriteF('done, \\d tokens\\n', n)\nENDPROC" },
   words: { 'main.e': "-> Multi-module showcase: tokenise a sentence into words (tools/ctype classifies\n-> characters), store each word as a node in a doubly-linked list (other/dll +\n-> tools/constructors), then walk the list printing words + a running letter sum.\nMODULE 'tools/ctype', 'other/dll', 'exec/lists', 'exec/nodes', 'tools/constructors'\n\nDEF words[20]:ARRAY OF LONG, nwords\n\nPROC main()\n  DEF s:PTR TO CHAR, i, c, len, start, l:lh, n:PTR TO ln, total\n  s := 'The quick brown Amiga E fox'\n  len := StrLen(s)\n  nwords := 0\n  newList(l)\n  start := -1\n  FOR i := 0 TO len\n    c := IF i < len THEN s[i] ELSE 32\n    IF isalpha(c)\n      IF start = -1 THEN start := i\n    ELSEIF start <> -1\n      addword(s, start, i)\n      addTail(l, newnode(NIL, words[nwords-1], 0, 0))\n      start := -1\n    ENDIF\n  ENDFOR\n  WriteF('words found:\\n')\n  total := 0\n  n := firstNode(l)\n  WHILE nodeSucc(n)\n    WriteF('  \\s (\\d chars)\\n', n.name, StrLen(n.name))\n    total := total + StrLen(n.name)\n    n := nodeSucc(n)\n  ENDWHILE\n  WriteF('\\d words, \\d total letters\\n', nwords, total)\nENDPROC\n\nPROC addword(s:PTR TO CHAR, start, end)\n  DEF buf:PTR TO CHAR, j\n  buf := String(end - start + 1)\n  FOR j := start TO end-1 DO buf[j-start] := s[j]\n  SetStr(buf, end - start)\n  words[nwords] := buf\n  nwords := nwords + 1\nENDPROC" },
+  evoshift: { 'main.e': "// E-VO only: // line comments, the << >> shift operators, ~ complement and NOT.\n// Native EC v3.3a rejects all of these - flip the lang: toggle to E-VO to build.\nPROC main()\n  DEF flags, i\n  flags := 0\n  // pack three bits in with shifts and OR\n  flags := flags OR (1 << 0)    // bit 0\n  flags := flags OR (1 << 3)    // bit 3\n  flags := flags OR (1 << 6)    // bit 6\n  WriteF('flags          = \\d  ($\\h)\\n', flags, flags)\n  WriteF('flags >> 3     = \\d\\n', flags >> 3)\n  WriteF('flags << 2     = \\d\\n', flags << 2)\n  WriteF('~flags AND $FF = \\d  ($\\h)\\n', ~flags AND $FF, ~flags AND $FF)\n  // test each bit back out with a shifted mask\n  FOR i := 0 TO 7\n    IF flags AND (1 << i) THEN WriteF('  bit \\d is set\\n', i)\n  ENDFOR\nENDPROC\n" },
+  evogrid: { 'main.e': "// E-VO only: multi-dimensional arrays (DEF t[rows][cols]:ARRAY OF INT).\n// A 5x5 multiplication table built in a 2D array, then printed row by row.\nPROC main()\n  DEF t[5][5]:ARRAY OF INT, r, c\n  FOR r := 0 TO 4\n    FOR c := 0 TO 4\n      t[r][c] := (r+1) * (c+1)\n    ENDFOR\n  ENDFOR\n  FOR r := 0 TO 4\n    FOR c := 0 TO 4 DO WriteF('\\d[4] ', t[r][c])\n    WriteF('\\n')\n  ENDFOR\nENDPROC\n" },
+  evotry: { 'main.e': "// E-VO only: TRY / CATCH / ENDTRY structured exception handling.\n// safeDiv raises on divide-by-zero; the caller catches it locally.\nPROC main()\n  DEF i, pairs:PTR TO LONG\n  pairs := [20,4, 9,3, 7,0, 100,5]\n  FOR i := 0 TO 3\n    TRY\n      WriteF('\\d / \\d = \\d\\n', pairs[i*2], pairs[i*2+1], safeDiv(pairs[i*2], pairs[i*2+1]))\n    CATCH\n      WriteF('\\d / \\d -> caught exception #\\d (divide by zero)\\n', pairs[i*2], pairs[i*2+1], exception)\n    ENDTRY\n  ENDFOR\nENDPROC\n\nPROC safeDiv(a, b)\n  IF b = 0 THEN Raise(99)\nENDPROC a / b\n" },
+  evostr: { 'main.e': "// E-VO only: the extended E-VO string library (StrClone, StrCompare, ...).\n// These procs ship with E-VO; native EC v3.3a does not provide them.\nPROC main()\n  DEF a[40]:STRING, b\n  StrCopy(a, 'Workbench')\n  b := StrClone(a)             // independent heap copy\n  WriteF('a       = \"\\s\"  (len \\d)\\n', a, StrLen(a))\n  WriteF('clone   = \"\\s\"\\n', b)\n  WriteF('compare = \\d   (0 = equal)\\n', StrCompare(a, b))\n  StrAdd(a, ' 3.1')            // grow the original (40-char buffer)\n  WriteF('a+add   = \"\\s\"\\n', a)\n  WriteF('compare = \\d   (non-zero = differ)\\n', StrCompare(a, b))\nENDPROC\n" },
 };
 $('examples').onchange = e => {
   const ex = EXAMPLES[e.target.value];
@@ -685,7 +694,7 @@ function editorModule(name) {
   const base = (name.startsWith('*') ? name.slice(1) : name).split('/').pop();
   for (const cand of [base + '.e', base.toLowerCase() + '.e']) {
     if (FS[cand] !== undefined && cand !== 'main.e' && isText(FS[cand])) {
-      const r = parse(FS[cand], cand);
+      const r = parse(FS[cand], cand, { evo: evoMode() });
       if (r.errors.length) {
         r.errors.slice(0, 3).forEach(er => log(`${cand}:${er.line}:${er.col} ${er.msg}`, 'err'));
         return null;
@@ -700,7 +709,8 @@ async function compileMain() {
   const src = FS['main.e'];
   if (!isText(src)) { log('no main.e source', 'err'); return null; }
   const t0 = performance.now();
-  const { program, errors: pe } = parse(src, 'main.e');
+  const evo = evoMode();
+  const { program, errors: pe } = parse(src, 'main.e', { evo });
   if (pe.length) { pe.slice(0, 6).forEach(er => log(`main.e:${er.line}:${er.col} ${er.msg}`, 'err')); return null; }
   const wanted = ['exec', 'dos', 'intuition', 'graphics',
     ...program.decls.filter(d => d.kind === 'Module').flatMap(d => d.names)];
@@ -738,6 +748,7 @@ async function compileMain() {
     }
   }
   const sem = analyze(program, {
+    evo,
     resolveModule: n => {
       const ed = editorModule(n);
       return ed !== undefined ? ed : (moduleCache.get(n.toLowerCase()) ?? null);
@@ -784,6 +795,7 @@ $('setNtsc').checked = !!settings.ntsc;
 $('setTurbo').checked = settings.turboFloppy !== false;
 $('setAudio').checked = settings.audio !== false;
 $('setFpFix').checked = !!settings.fpFix;
+$('setEvo').value = settings.evo ? 'evo' : '';
 function readSettings() {
   const s = {
     model: $('setModel').value,
@@ -794,11 +806,14 @@ function readSettings() {
     turboFloppy: $('setTurbo').checked,
     audio: $('setAudio').checked,
     fpFix: $('setFpFix').checked,
+    evo: $('setEvo').value === 'evo',
   };
   localStorage.setItem('ide-settings', JSON.stringify(s));
   return s;
 }
-for (const id of ['setModel', 'setFast', 'setHires', 'setVdouble', 'setNtsc', 'setTurbo', 'setAudio', 'setFpFix']) {
+// E-VO language mode (Native EC v3.3a by default); read live at compile time
+function evoMode() { return $('setEvo').value === 'evo'; }
+for (const id of ['setModel', 'setFast', 'setHires', 'setVdouble', 'setNtsc', 'setTurbo', 'setAudio', 'setFpFix', 'setEvo']) {
   $(id).addEventListener('change', readSettings);
 }
 
@@ -1142,6 +1157,7 @@ async function loadProject(boxName) {
     $('setTurbo').checked = proj.settings.turboFloppy !== false;
     $('setAudio').checked = proj.settings.audio !== false;
     $('setFpFix').checked = !!proj.settings.fpFix;
+    $('setEvo').value = proj.settings.evo ? 'evo' : '';
   }
   loadIntoEditor(FS['main.e'] !== undefined ? 'main.e' : Object.keys(FS)[0], true);
   log(`project "${boxName.replace(/\.project$/, '')}" loaded (files + settings)`, 'ok');

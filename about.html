@@ -72,11 +72,25 @@
       display: inline-block; font-size: 11px; border: 1px solid var(--border);
       border-radius: 9px; padding: 1px 9px; color: var(--muted); margin-right: 6px;
     }
+    .pill.rom { color: #54aae8; border-color: #3a5a7a; }
+    .pill.disk { color: #c8a0ff; border-color: #5a3a7a; }
+    .pill.hdf { color: #2aa198; border-color: #2aa198; }
+    .pill.bin { color: #ffc98a; border-color: #b58900; }
+    .pill.project { color: #ec6cac; border-color: #a02460; }
     ol li, ul li { margin: 5px 0; }
     kbd {
       border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px;
       padding: 0 6px; background: var(--panel); font-family: inherit; font-size: 12px;
     }
+    details {
+      margin: 8px 0; border: 1px solid var(--border-subtle);
+      border-radius: 6px; background: var(--code-bg);
+    }
+    summary { cursor: pointer; padding: 7px 12px; color: var(--text-bright); user-select: none; }
+    summary:hover { color: var(--accent); }
+    .modgrid { margin: 0; padding: 4px 12px 12px; display: flex; flex-wrap: wrap; gap: 5px; }
+    .modgrid code { font-size: 12px; }
+    .muted { color: var(--muted); }
   </style>
 </head>
 <body>
@@ -158,15 +172,151 @@
        exec/dos/intuition/graphics calls are preloaded implicitly — <code>OpenW</code>,
        <code>WriteF</code>, <code>MODE_NEWFILE</code> just work.</p>
 
+    <h2 id="evo">E-VO mode — modern Amiga E</h2>
+    <p>Alongside the classic 1997 dialect, the IDE can compile <b>E-VO</b> — the
+       modern, still-maintained evolution of Amiga E by <b>Darren Coles</b>. Flip
+       the <b>lang:</b> dropdown in the Compiler panel from <i>Native (EC&nbsp;3.3a)</i>
+       to <i>E-VO</i> and ecomp accepts the E-VO language extensions. The choice is
+       saved with your <a href="#projects">project</a>.</p>
+    <img class="shot" src="assets/img/ide-evo-mode.png" alt="An E-VO example in the editor with the lang dropdown set to E-VO and a successful compile" />
+    <div class="caption">The <b>lang: E-VO</b> toggle in the Compiler panel — an E-VO example (<code>//</code> comments, <code>&lt;&lt;</code>/<code>&gt;&gt;</code> shifts) compiling cleanly.</div>
+    <p>ecomp implements E-VO as a strict, opt-in <b>superset</b>: every classic-E
+       program still compiles byte-for-byte identically in either mode — E-VO only
+       <i>adds</i> constructs on top. What the toggle unlocks:</p>
+    <ul>
+      <li><code>//</code> line comments</li>
+      <li>multi-dimensional arrays — <code>DEF grid[3][3]:ARRAY OF INT</code></li>
+      <li><code>TRY</code> / <code>CATCH</code> / <code>ENDTRY</code> block exceptions</li>
+      <li>negated control flow — <code>IFN</code>, <code>WHILEN</code>, <code>ELSEIFN</code>, <code>UNTILN</code>, <code>EXITN</code> …</li>
+      <li><code>UNION</code> / <code>ENDUNION</code> fields in objects</li>
+      <li><code>BYTE</code> / <code>WORD</code> as array-element and pointer types — <code>ARRAY OF BYTE</code>, <code>PTR TO WORD</code></li>
+      <li>the <code>&lt;&lt;</code> / <code>&gt;&gt;</code> shift operators, <code>~</code> bitwise complement and <code>NOT</code></li>
+      <li><code>\xNN</code> hex and <code>\!</code> escapes in strings</li>
+      <li>the <b>E-VO standard library</b> — extended string and list procs
+          (<code>StrClone</code>, <code>StrCompare</code>, <code>StrAdd</code>,
+          <code>ListAdd</code>, <code>ListCopy</code>, …), injected automatically
+          when your program references them</li>
+    </ul>
+    <p>Every one of these is validated against the <b>real E-VO compiler</b>: a
+       three-way differential (ecomp vs the original EC&nbsp;v3.3a vs E-VO) runs
+       E-VO's own unit-test suite and checks each shipped E-VO example
+       byte-for-byte identical to E-VO's output under emulation. Full feature list
+       and internals:
+       <a href="https://github.com/gin0115/Amiga-E-Compiler-WebBased/blob/main/docs/evo-support.md" target="_blank" rel="noopener">docs/evo-support.md</a>.</p>
+    <p>Try the four <b>(evo)</b> entries in the examples gallery — bit shifts &amp;
+       <code>//</code> comments, a 2-D multiplication table, <code>TRY</code>/<code>CATCH</code>,
+       and the extended string library. They only compile with the lang toggle set
+       to E-VO.</p>
+    <p class="caption">E-VO is by Darren Coles —
+       <a href="https://aminet.net/package/dev/e/evo" target="_blank" rel="noopener">dev/e/evo on Aminet</a>.</p>
+
+    <h2 id="modules">Bundled modules — include and go</h2>
+    <p>The complete Amiga E <b>v40 module set</b> ships with the IDE — <b>382</b>
+       precompiled <code>.m</code> modules. Name any of them in a <code>MODULE</code>
+       statement and ecomp links it into your program automatically; there is
+       nothing to install. The exec / dos / intuition / graphics core is preloaded
+       implicitly (so <code>WriteF</code>, <code>OpenW</code>, … always work);
+       everything else is one line away:</p>
+<pre><code><span class="kw">MODULE</span> <span class="str">'tools/EasyGUI'</span>, <span class="str">'gadtools'</span>   <span class="muted">-> a GUI toolkit + a system library, both bundled</span></code></pre>
+    <p>The first six groups are <b>E code/library modules</b> you call directly
+       (and several drive the gallery examples). The rest are the
+       <code>.library</code> <b>interface</b> modules — constants, structs and LVO
+       tables for the OS. All 382, grouped:</p>
+    <div class="card">
+      <details><summary>tools/ — utility code modules (stack, ctype, EasyGUI, Vector, …) <span class="muted">(34)</span></summary>
+        <p class="modgrid"><code>tools/Boopsi</code> <code>tools/EasyGUI</code> <code>tools/EasyGUI_debug</code> <code>tools/EasyGUI_lite</code> <code>tools/EasyGUI_notag</code> <code>tools/Vector</code> <code>tools/arexx</code> <code>tools/async</code> <code>tools/clonescreen</code> <code>tools/constructors</code> <code>tools/cookrawkey</code> <code>tools/copylist</code> <code>tools/ctype</code> <code>tools/exceptions</code> <code>tools/file</code> <code>tools/filledvdefs</code> <code>tools/filledvector</code> <code>tools/ghost</code> <code>tools/ilbm</code> <code>tools/ilbmdefs</code> <code>tools/inithook</code> <code>tools/installhook</code> <code>tools/iterators</code> <code>tools/lisp</code> <code>tools/longreal</code> <code>tools/longrealtiny</code> <code>tools/macros</code> <code>tools/muicustomclass</code> <code>tools/pt</code> <code>tools/scrbuffer</code> <code>tools/simplelex</code> <code>tools/stack</code> <code>tools/textlen</code> <code>tools/trapguru</code></p>
+      </details>
+      <details><summary>amigalib/ — E ports of the classic amiga.lib helpers <span class="muted">(10)</span></summary>
+        <p class="modgrid"><code>amigalib/Tasks</code> <code>amigalib/argarray</code> <code>amigalib/boopsi</code> <code>amigalib/cx</code> <code>amigalib/interrupts</code> <code>amigalib/io</code> <code>amigalib/lists</code> <code>amigalib/ports</code> <code>amigalib/random</code> <code>amigalib/time</code></p>
+      </details>
+      <details><summary>other/ — assorted community code modules <span class="muted">(35)</span></summary>
+        <p class="modgrid"><code>other/battclock</code> <code>other/battmem</code> <code>other/bitfield</code> <code>other/bits</code> <code>other/cia</code> <code>other/clearlist</code> <code>other/cloneworkbench</code> <code>other/disk</code> <code>other/dislib</code> <code>other/dispose</code> <code>other/disposeelinkedlist</code> <code>other/disposelink</code> <code>other/dll</code> <code>other/ecode</code> <code>other/fastinsert</code> <code>other/initlist</code> <code>other/isdigit</code> <code>other/isidentifier</code> <code>other/lowerchar</code> <code>other/misc</code> <code>other/mod</code> <code>other/potgo</code> <code>other/qualifieditemaddress</code> <code>other/readstr</code> <code>other/sendexplorer</code> <code>other/sendrexx</code> <code>other/setprogname</code> <code>other/skipnonwhite</code> <code>other/skiptochar</code> <code>other/skiptoedelim</code> <code>other/skipwhite</code> <code>other/split</code> <code>other/stack</code> <code>other/strcopy</code> <code>other/upperchar</code></p>
+      </details>
+      <details><summary>oomodules/ — object-oriented class modules (NEW/methods) <span class="muted">(35)</span></summary>
+        <p class="modgrid"><code>oomodules/commodity</code> <code>oomodules/coordinate</code> <code>oomodules/coordinate/line</code> <code>oomodules/coordinate/polyline</code> <code>oomodules/library</code> <code>oomodules/library/asl</code> <code>oomodules/library/commodities</code> <code>oomodules/library/device</code> <code>oomodules/library/device/keyboard</code> <code>oomodules/library/device/printer</code> <code>oomodules/library/device/trackdisk</code> <code>oomodules/library/exec/port</code> <code>oomodules/library/exec/port/arexxport</code> <code>oomodules/library/exec/port/portlist</code> <code>oomodules/library/gadtools</code> <code>oomodules/library/locale</code> <code>oomodules/library/locale/cataloglist</code> <code>oomodules/library/reqtools</code> <code>oomodules/list/associativearray</code> <code>oomodules/list/associativearray/associativestringarray</code> <code>oomodules/list/doublylinked</code> <code>oomodules/list/elist</code> <code>oomodules/list/execlist</code> <code>oomodules/list/queuestack</code> <code>oomodules/list/stringlist/stringlist</code> <code>oomodules/object</code> <code>oomodules/sort</code> <code>oomodules/sort/address</code> <code>oomodules/sort/numbers</code> <code>oomodules/sort/numbers/float</code> <code>oomodules/sort/numbers/fraction</code> <code>oomodules/sort/numbers/integer</code> <code>oomodules/sort/numbers/twonumbers</code> <code>oomodules/sort/string</code> <code>oomodules/sort/string/rawstring</code></p>
+      </details>
+      <details><summary>class/ — small OO container classes <span class="muted">(4)</span></summary>
+        <p class="modgrid"><code>class/hash</code> <code>class/sc</code> <code>class/sctext</code> <code>class/stack</code></p>
+      </details>
+      <details><summary>afc/ — the Amiga Foundation Classes set <span class="muted">(20)</span></summary>
+        <p class="modgrid"><code>afc/BeBox</code> <code>afc/Bitmapper</code> <code>afc/DirList</code> <code>afc/Displayer</code> <code>afc/IFFParser</code> <code>afc/Localer</code> <code>afc/Mousepointer</code> <code>afc/NodeMaster</code> <code>afc/Parser</code> <code>afc/ReqTooller</code> <code>afc/StringNode</code> <code>afc/ToolType</code> <code>afc/Worldbuilder</code> <code>afc/explain_exception</code> <code>afc/hardsprite</code> <code>afc/mgui</code> <code>afc/rexxer</code> <code>afc/super_picture</code> <code>afc/tasker</code> <code>afc/validPortName</code></p>
+      </details>
+      <details><summary>system libraries — the core .library interfaces <span class="muted">(50)</span></summary>
+        <p class="modgrid"><code>amigaguide</code> <code>asl</code> <code>bgui</code> <code>bullet</code> <code>colorwheel</code> <code>commodities</code> <code>console</code> <code>cybergraphics</code> <code>datatypes</code> <code>diskfont</code> <code>dos</code> <code>dtclass</code> <code>exec</code> <code>expansion</code> <code>gadtools</code> <code>graphics</code> <code>gtx</code> <code>icon</code> <code>iff</code> <code>iffparse</code> <code>input</code> <code>intuition</code> <code>keymap</code> <code>layers</code> <code>locale</code> <code>lowlevel</code> <code>mathffp</code> <code>mathieeedoubbas</code> <code>mathieeedoubtrans</code> <code>mathieeesingbas</code> <code>mathieeesingtrans</code> <code>mathtrans</code> <code>midi</code> <code>nofrag</code> <code>nonvolatile</code> <code>pointer</code> <code>powerpacker</code> <code>ramdrive</code> <code>realtime</code> <code>req</code> <code>reqtools</code> <code>rexxsyslib</code> <code>timer</code> <code>translator</code> <code>triton</code> <code>utility</code> <code>vector</code> <code>vmem</code> <code>wb</code> <code>wizard</code></p>
+      </details>
+      <details><summary>exec/ <span class="muted">(16)</span></summary>
+        <p class="modgrid"><code>exec/alerts</code> <code>exec/devices</code> <code>exec/errors</code> <code>exec/execbase</code> <code>exec/interrupts</code> <code>exec/io</code> <code>exec/libraries</code> <code>exec/lists</code> <code>exec/memory</code> <code>exec/nodes</code> <code>exec/ports</code> <code>exec/resident</code> <code>exec/semaphores</code> <code>exec/strings</code> <code>exec/tasks</code> <code>exec/types</code></p>
+      </details>
+      <details><summary>dos/ <span class="muted">(14)</span></summary>
+        <p class="modgrid"><code>dos/datetime</code> <code>dos/dos</code> <code>dos/dos_lib</code> <code>dos/dosasl</code> <code>dos/dosextens</code> <code>dos/doshunks</code> <code>dos/dostags</code> <code>dos/exall</code> <code>dos/filehandler</code> <code>dos/notify</code> <code>dos/rdargs</code> <code>dos/record</code> <code>dos/stdio</code> <code>dos/var</code></p>
+      </details>
+      <details><summary>intuition/ <span class="muted">(13)</span></summary>
+        <p class="modgrid"><code>intuition/cghooks</code> <code>intuition/classes</code> <code>intuition/classusr</code> <code>intuition/gadgetclass</code> <code>intuition/icclass</code> <code>intuition/imageclass</code> <code>intuition/intuition</code> <code>intuition/intuitionbase</code> <code>intuition/iobsolete</code> <code>intuition/pointerclass</code> <code>intuition/preferences</code> <code>intuition/screens</code> <code>intuition/sghooks</code></p>
+      </details>
+      <details><summary>graphics/ <span class="muted">(23)</span></summary>
+        <p class="modgrid"><code>graphics/clip</code> <code>graphics/coerce</code> <code>graphics/collide</code> <code>graphics/copper</code> <code>graphics/display</code> <code>graphics/displayinfo</code> <code>graphics/gels</code> <code>graphics/gfx</code> <code>graphics/gfxbase</code> <code>graphics/gfxmacros</code> <code>graphics/gfxnodes</code> <code>graphics/graphint</code> <code>graphics/layers</code> <code>graphics/modeid</code> <code>graphics/monitor</code> <code>graphics/rastport</code> <code>graphics/regions</code> <code>graphics/rpattr</code> <code>graphics/scale</code> <code>graphics/sprite</code> <code>graphics/text</code> <code>graphics/videocontrol</code> <code>graphics/view</code></p>
+      </details>
+      <details><summary>devices/ <span class="muted">(21)</span></summary>
+        <p class="modgrid"><code>devices/audio</code> <code>devices/bootblock</code> <code>devices/cd</code> <code>devices/clipboard</code> <code>devices/console</code> <code>devices/conunit</code> <code>devices/gameport</code> <code>devices/hardblocks</code> <code>devices/input</code> <code>devices/inputevent</code> <code>devices/keyboard</code> <code>devices/keymap</code> <code>devices/narrator</code> <code>devices/parallel</code> <code>devices/printer</code> <code>devices/prtbase</code> <code>devices/prtgfx</code> <code>devices/scsidisk</code> <code>devices/serial</code> <code>devices/timer</code> <code>devices/trackdisk</code></p>
+      </details>
+      <details><summary>libraries/ <span class="muted">(32)</span></summary>
+        <p class="modgrid"><code>libraries/amigaguide</code> <code>libraries/asl</code> <code>libraries/bgui</code> <code>libraries/bgui_macros</code> <code>libraries/commodities</code> <code>libraries/configregs</code> <code>libraries/configvars</code> <code>libraries/cybergraphics</code> <code>libraries/diskfont</code> <code>libraries/expansion</code> <code>libraries/expansionbase</code> <code>libraries/gadtools</code> <code>libraries/iff</code> <code>libraries/iffparse</code> <code>libraries/locale</code> <code>libraries/lowlevel</code> <code>libraries/mathieeesp</code> <code>libraries/mathlibrary</code> <code>libraries/mathresource</code> <code>libraries/midi</code> <code>libraries/muibuilder</code> <code>libraries/nofrag</code> <code>libraries/nonvolatile</code> <code>libraries/ppbase</code> <code>libraries/realtime</code> <code>libraries/reqbase</code> <code>libraries/reqtools</code> <code>libraries/translator</code> <code>libraries/triton</code> <code>libraries/triton_macros</code> <code>libraries/vmem</code> <code>libraries/wizard</code></p>
+      </details>
+      <details><summary>gadgets/ <span class="muted">(6)</span></summary>
+        <p class="modgrid"><code>gadgets/button</code> <code>gadgets/calendar</code> <code>gadgets/colorwheel</code> <code>gadgets/gradientslider</code> <code>gadgets/tabs</code> <code>gadgets/tapedeck</code></p>
+      </details>
+      <details><summary>datatypes/ <span class="muted">(6)</span></summary>
+        <p class="modgrid"><code>datatypes/animationclass</code> <code>datatypes/datatypes</code> <code>datatypes/datatypesclass</code> <code>datatypes/pictureclass</code> <code>datatypes/soundclass</code> <code>datatypes/textclass</code></p>
+      </details>
+      <details><summary>resources/ <span class="muted">(11)</span></summary>
+        <p class="modgrid"><code>resources/battclock</code> <code>resources/battmem</code> <code>resources/battmembitsamiga</code> <code>resources/battmembitsshared</code> <code>resources/card</code> <code>resources/cia</code> <code>resources/disk</code> <code>resources/filesysres</code> <code>resources/mathresource</code> <code>resources/misc</code> <code>resources/potgo</code></p>
+      </details>
+      <details><summary>prefs/ <span class="muted">(15)</span></summary>
+        <p class="modgrid"><code>prefs/font</code> <code>prefs/icontrol</code> <code>prefs/input</code> <code>prefs/locale</code> <code>prefs/overscan</code> <code>prefs/palette</code> <code>prefs/pointer</code> <code>prefs/prefhdr</code> <code>prefs/printergfx</code> <code>prefs/printerps</code> <code>prefs/printertxt</code> <code>prefs/screenmode</code> <code>prefs/serial</code> <code>prefs/sound</code> <code>prefs/wbpattern</code></p>
+      </details>
+      <details><summary>plugins/ <span class="muted">(14)</span></summary>
+        <p class="modgrid"><code>plugins/animcontrol</code> <code>plugins/button</code> <code>plugins/calendar</code> <code>plugins/colorwheel</code> <code>plugins/gradient</code> <code>plugins/iconify</code> <code>plugins/imagebutton</code> <code>plugins/led</code> <code>plugins/password</code> <code>plugins/tabs</code> <code>plugins/tapedeck</code> <code>plugins/text_plug</code> <code>plugins/ticker</code> <code>plugins/toolify</code></p>
+      </details>
+      <details><summary>utility/ <span class="muted">(6)</span></summary>
+        <p class="modgrid"><code>utility/date</code> <code>utility/hooks</code> <code>utility/name</code> <code>utility/pack</code> <code>utility/tagitem</code> <code>utility/utility</code></p>
+      </details>
+      <details><summary>hardware/ <span class="muted">(6)</span></summary>
+        <p class="modgrid"><code>hardware/adkbits</code> <code>hardware/blit</code> <code>hardware/cia</code> <code>hardware/custom</code> <code>hardware/dmabits</code> <code>hardware/intbits</code></p>
+      </details>
+      <details><summary>rexx/ <span class="muted">(4)</span></summary>
+        <p class="modgrid"><code>rexx/errors</code> <code>rexx/rexxio</code> <code>rexx/rxslib</code> <code>rexx/storage</code></p>
+      </details>
+      <details><summary>diskfont/ <span class="muted">(4)</span></summary>
+        <p class="modgrid"><code>diskfont/diskfont</code> <code>diskfont/diskfonttag</code> <code>diskfont/glyph</code> <code>diskfont/oterrors</code></p>
+      </details>
+      <details><summary>workbench/ <span class="muted">(2)</span></summary>
+        <p class="modgrid"><code>workbench/startup</code> <code>workbench/workbench</code></p>
+      </details>
+      <details><summary>images/ <span class="muted">(1)</span></summary>
+        <p class="modgrid"><code>images/led</code></p>
+      </details>
+    </div>
+
+    <h3 id="usermodules">Adding your own modules</h3>
+    <p>Got a precompiled <code>.m</code> from elsewhere — a third-party library, or
+       one you built yourself with real EC or E-VO? Click <b>+ module</b> in the
+       Project files panel and choose the <code>.m</code> file. It is parsed on the
+       spot and becomes resolvable by <code>MODULE 'name'</code> (where
+       <code>name</code> is the filename without <code>.m</code>), linked exactly
+       like a shipped module. A user module <b>overrides</b> any bundled module of
+       the same name, so you can shadow a shipped one with your own build. It lives
+       in the page only — nothing is uploaded — and a bar above the editor lets you
+       remove it again.</p>
+
     <h2 id="diskbox">The disk box</h2>
     <p>Your persistent, private, in-browser storage (IndexedDB — survives reloads,
        multi-GB quota, nothing leaves your machine):</p>
     <ul>
-      <li><span class="pill">ROM</span> Kickstart images — ↻ selects the active one (shown in the header)</li>
-      <li><span class="pill">DISK</span> ADF floppies — mount via the <b>DF0:–DF2:</b> drive chips (DF0 = boot disk); DF3 is reserved for compiled output</li>
-      <li><span class="pill">HDF</span> hard disk images — attached as DH0 on next boot</li>
-      <li><span class="pill">BIN</span> every compiled binary, automatically</li>
-      <li><span class="pill">PROJECT</span> saved projects (see below)</li>
+      <li><span class="pill rom">ROM</span> Kickstart images — ↻ selects the active one (shown in the header)</li>
+      <li><span class="pill disk">DISK</span> ADF floppies — mount via the <b>DF0:–DF2:</b> drive chips (DF0 = boot disk); DF3 is reserved for compiled output</li>
+      <li><span class="pill hdf">HDF</span> hard disk images — attached as DH0 on next boot</li>
+      <li><span class="pill bin">BIN</span> every compiled binary, automatically</li>
+      <li><span class="pill project">PROJECT</span> saved projects (see below)</li>
     </ul>
     <p>Every item can be renamed and given a description (✎), downloaded (⤓) or
        deleted (✕). Drop any mix of files on <b>add</b> — they're sorted by extension.</p>
