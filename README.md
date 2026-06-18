@@ -3,8 +3,8 @@
 A browser IDE for the **Amiga E** programming language: write E in the
 editor, compile it **in your browser** (via the
 [ecomp compiler](https://github.com/gin0115/Amiga-E-Compiler-WebBased),
-included as a git submodule), and run the result on an emulated Amiga —
-all client-side, no server.
+a separate repo deployed alongside this one), and run the result on an
+emulated Amiga — all client-side, no server.
 
 > The Amiga E language and its v40 modules are the work of
 > **[Wouter van Oortmerssen](https://strlen.com/)**, used with his kind
@@ -53,8 +53,17 @@ Workbench disks, by Cloanto).
 
 ## Setup
 
+The site is **three independent repos** — this IDE, the
+[ecomp compiler](https://github.com/gin0115/Amiga-E-Compiler-WebBased), and
+the [docs site](https://github.com/gin0115/Amiga-E-Docs-Site) — each deployed
+separately (to `/`, `/ecomp` and `/docs`). The IDE loads the compiler from
+`./ecomp`, so clone it alongside:
+
 ```sh
-git clone --recurse-submodules git@github.com:gin0115/Amiga-E-Web-IDE.git
+git clone git@github.com:gin0115/Amiga-E-Web-IDE.git
+cd Amiga-E-Web-IDE
+git clone git@github.com:gin0115/Amiga-E-Compiler-WebBased.git ecomp
+git clone git@github.com:gin0115/Amiga-E-Docs-Site.git docs   # optional — the /docs guides
 # serve the directory with any static web server, then:
 #  1. Set Kickstart ROM…  (e.g. kick31 A1200 ROM from Amiga Forever)
 #  2. Add disk (ADF)…     (a Workbench 3.1 boot disk)
@@ -68,3 +77,10 @@ You also need the SAE emulator engine in `vendor/sae/` —
 
 Model (A500–A4000), fast RAM, hi-res/double-scan, NTSC — applied on the
 next boot, persisted in the browser.
+
+There's also an opt-in **40.68 floating-point fix**: Kickstart 3.1 rev 40.68
+(the stock A1200 ROM) ships a buggy `mathieeesingbas` whose multiply/divide
+vectors crash any float op with `#8000000B` when booting bare without
+SetPatch. Tick the toggle and the IDE applies the four-byte Harry Sintonen
+fix to the ROM in memory before boot — gated on the exact broken signature,
+so it's a no-op on every other ROM, and your stored ROM is never modified.
